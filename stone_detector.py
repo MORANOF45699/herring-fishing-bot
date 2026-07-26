@@ -1,10 +1,13 @@
 """
-stone_detector.py - อ่านตัวเลข Stone จาก HUD + หาช่อง Stone ใน inventory
+stone_detector.py - อ่านตัวเลขไอเทมจาก HUD + หาช่องไอเทมใน inventory
 
 หลักการอ่าน counter:
-  template matching ภาพ "100/100" (full_template.png) กับบริเวณตัวเลขบน HUD
-  - score สูง = เต็ม 100/100
+  template matching ภาพตอนเต็ม เช่น "100/100" หรือ "40/40" (full_template.png)
+  กับบริเวณตัวเลขบน HUD
+  - score สูง = เต็ม
   - score ต่ำ = ยังไม่เต็ม (เลขอื่นรูปร่างไม่เหมือน)
+  ความกว้างข้อความขั้นต่ำคำนวณจาก template เอง → รองรับความจุ 40/60/100 ฯลฯ
+  (เปลี่ยนความจุ = ถ่าย full_template ใหม่ตอนเลขเต็ม ด้วย calibrate ปุ่ม 8)
   หมายเหตุ: นับ contour ใช้ไม่ได้เพราะฟอนต์เกมตัว "00" ติดกันเป็นก้อนเดียว
 """
 
@@ -70,20 +73,29 @@ def count_counter_glyphs(sct, debug=False):
 
 FULL_TEMPLATE = os.path.join(os.path.dirname(__file__), "full_template.png")
 _full_template_mask = None
+_full_min_width = None
+
+
+def full_min_width():
+    """ความกว้างข้อความขั้นต่ำที่ถือว่าเต็ม (คำนวณจาก template — รองรับทุกความจุ)"""
+    return _full_min_width if _full_min_width is not None else config.FULL_TEXT_MIN_WIDTH
 
 
 def full_match_score(sct, debug=False):
     """
-    เทียบบริเวณ counter กับภาพ '100/100'
+    เทียบบริเวณ counter กับภาพตอนเต็ม (full_template.png)
     match บน mask สีส้ม (ตัดพื้นหลังโปร่งใสของ HUD ทิ้ง)
     Returns: (score 0.0-1.0, ความกว้างข้อความเป็น px)
     """
-    global _full_template_mask
+    global _full_template_mask, _full_min_width
     if _full_template_mask is None:
         tmpl = cv2.imread(FULL_TEMPLATE)
         if tmpl is None:
             raise FileNotFoundError(f"ไม่พบ {FULL_TEMPLATE}")
         _full_template_mask = _orange_mask(_scale_template(tmpl))
+        xs = np.where(_full_template_mask.any(axis=0))[0]
+        if len(xs):
+            _full_min_width = int((xs[-1] - xs[0] + 1) * 0.85)
 
     bgr = _grab(sct, config.COUNTER_REGION)
     mask = _orange_mask(bgr)
@@ -105,13 +117,13 @@ def full_match_score(sct, debug=False):
 
 
 def is_stone_full(sct):
-    """Stone เต็ม 100/100 หรือยัง (ต้องผ่านทั้ง score และความกว้าง)"""
+    """ไอเทมเต็มความจุหรือยัง (ต้องผ่านทั้ง score และความกว้าง)"""
     score, width = full_match_score(sct)
-    return score >= config.FULL_MATCH_THRESHOLD and width >= config.FULL_TEXT_MIN_WIDTH
+    return score >= config.FULL_MATCH_THRESHOLD and width >= full_min_width()
 
 
 def is_stone_empty(sct):
-    """counter ไม่ใช่ 100/100 แล้ว (ใช้ยืนยันว่าฝากสำเร็จ)"""
+    """counter ไม่เต็มแล้ว (ใช้ยืนยันว่าฝาก/ทิ้งสำเร็จ)"""
     return not is_stone_full(sct)
 
 
@@ -134,13 +146,13 @@ def find_stone_slot(sct, region=None):
     _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
     if max_val < config.TEMPLATE_MATCH_THRESHOLD:
-        print(f"[detector] ⚠ หาช่อง Stone ไม่เจอ (score={max_val:.2f})")
+        print(f"[detector] ⚠ หาช่องไอเทมไม่เจอ (score={max_val:.2f})")
         return None
 
     th, tw = template.shape[:2]
     x = region["left"] + max_loc[0] + tw // 2
     y = region["top"] + max_loc[1] + th // 2
-    print(f"[detector] เจอช่อง Stone ที่ ({x}, {y}) score={max_val:.2f}")
+    print(f"[detector] เจอช่องไอเทมที่ ({x}, {y}) score={max_val:.2f}")
     return (x, y)
 
 

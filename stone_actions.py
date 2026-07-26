@@ -120,7 +120,7 @@ def deposit_to_trunk(sct):
         inp.press_esc()
         return False
 
-    print(f"[ฝาก] ลาก Stone {slot} → {config.DROP_POINT}")
+    print(f"[ฝาก] ลากไอเทม {slot} → {config.DROP_POINT}")
     inp.drag(*slot, *config.DROP_POINT, duration=config.DRAG_DURATION)
     time.sleep(config.DIALOG_OPEN_DELAY)
 

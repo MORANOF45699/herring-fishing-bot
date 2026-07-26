@@ -1,16 +1,17 @@
 """
-calibrate.py - บันทึกพิกัดปุ่ม + template ช่อง Stone สำหรับจอของคุณ
+calibrate.py - บันทึกพิกัดปุ่ม + template ช่องไอเทมสำหรับจอของคุณ
 
 วิธีใช้:
   1. รัน: python calibrate.py
   2. เข้าเกม เปิดหน้าต่างที่เกี่ยวข้อง แล้วเอาเมาส์ชี้ตามจุดต่าง ๆ กดปุ่มตัวเลข:
-     [1] ชี้กลางไอคอน Stone ใน INVENTORY   → บันทึก stone_template.png
+     [1] ชี้กลางไอคอนไอเทมใน INVENTORY      → บันทึก stone_template.png
      [2] ชี้จุดว่างฝั่ง SECONDARY (จุดปล่อยของ) → DROP_POINT
      [3] ชี้ปุ่ม Max ใน dialog                → BTN_MAX
      [4] ชี้ปุ่ม O ยืนยัน ใน dialog            → BTN_CONFIRM
      [5] ชี้ปุ่ม "เปิดหลังรถ" ในหน้า GARAGE     → BTN_OPEN_TRUNK
      [6] เปิดแผนที่/เมนู pause (Esc) ค้างไว้ แล้วกด 6 → map_template.png
-     [7] เปิดหน้า GARAGE (กด L) ค้างไว้ แล้วกด 7 → garage_template.png
+     [7] เปิดหน้าท้ายรถ (กด L) ค้างไว้ แล้วกด 7 → garage_template.png
+     [8] ตอนไอเทมเต็มความจุ (เช่น 40/40, 100/100) กด 8 → full_template.png
      [0] บันทึก calibration.json แล้วออก
 """
 
@@ -75,7 +76,8 @@ def main():
         keyboard.add_hotkey("4", lambda: rec("4", "BTN_CONFIRM"))
         keyboard.add_hotkey("5", lambda: rec("5", "BTN_OPEN_TRUNK"))
         keyboard.add_hotkey("6", lambda: save_region_template("MAP_CHECK_REGION", "map_template.png", "แผนที่/เมนู"))
-        keyboard.add_hotkey("7", lambda: save_region_template("GARAGE_CHECK_REGION", "garage_template.png", "หน้า GARAGE"))
+        keyboard.add_hotkey("7", lambda: save_region_template("GARAGE_CHECK_REGION", "garage_template.png", "หน้าท้ายรถ"))
+        keyboard.add_hotkey("8", lambda: save_region_template("COUNTER_REGION", "full_template.png", "counter ตอนเต็ม"))
 
         print("รอการกดปุ่ม... (กด 0 เพื่อบันทึกและออก)")
         keyboard.wait("0")

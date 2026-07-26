@@ -1,15 +1,16 @@
 """
-stone_main.py - บอทขุดหินอัตโนมัติ (FiveM Stone Farming Bot)
+stone_main.py - บอทเก็บไอเทมอัตโนมัติ (FiveM Item Farming Bot)
+ใช้ได้กับทุกไอเทม/ทุกความจุ (40/60/100 ฯลฯ) — แค่ calibrate template ให้ตรง
 
 วิธีใช้:
-  1. เอารถไปจอดใกล้จุดขุด แล้วยืนในระยะที่กด L เปิดท้ายรถได้
-  2. รัน: python stone_main.py
-  3. สลับไปหน้าเกม แล้วกด F10 เพื่อเริ่ม (บอทจะกด G เริ่มออโต้ฟาร์มให้)
-  4. กด F10 อีกครั้งเพื่อหยุดชั่วคราว / Esc ในคอนโซลเพื่อปิดโปรแกรม
+  1. รัน: python stone_main.py
+  2. สลับไปหน้าเกม แล้วกด F10 เพื่อเริ่ม (บอทจะกด G เริ่มออโต้ฟาร์มให้)
+  3. กด F10 อีกครั้งเพื่อหยุดชั่วคราว / Esc ในคอนโซลเพื่อปิดโปรแกรม
 
 Flow:
-  ออโต้ฟาร์ม (G) → อ่านเลข Stone จาก HUD ทุก 2 วิ
-  → เต็ม 100/100 → กด L → เปิดหลังรถ → ลาก Stone → Max → O → ESC → G → วนต่อ
+  ออโต้ฟาร์ม (G) → อ่านเลขไอเทมจาก HUD ทุก 2 วิ → เต็มความจุ →
+  โหมด trunk:   กด L เปิดท้ายรถ → ลากไอเทม → Max → O → ESC → G → วนต่อ
+  โหมด discard: กด T เปิดกระเป๋า → คลิกขวา → Delete → Max → O → ESC → G → วนต่อ
 """
 
 import sys
@@ -22,7 +23,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 import config
 import stone_input as inp
-from stone_detector import full_match_score, is_map_open, counter_changed
+from stone_detector import full_match_score, full_min_width, is_map_open, counter_changed
 from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
                            drink_remaining)
 
@@ -31,7 +32,7 @@ MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่คร�
 
 def print_banner():
     print("=" * 55)
-    print("    ⛏️  FiveM Stone Farming Bot (บอทขุดหิน) ⛏️    ")
+    print("    🤖  FiveM Item Farming Bot (บอทเก็บไอเทม) 🤖    ")
     print("=" * 55)
     print("วิธีใช้งาน:")
     print(f"  - กด [ {config.KEY_TOGGLE.upper()} ] เพื่อ เปิด/ปิด บอท")
@@ -86,7 +87,7 @@ def main():
             drink_if_due(sct)
 
             score, width = full_match_score(sct)
-            full = score >= config.FULL_MATCH_THRESHOLD and width >= config.FULL_TEXT_MIN_WIDTH
+            full = score >= config.FULL_MATCH_THRESHOLD and width >= full_min_width()
             mins = drink_remaining() / 60
             print(f"[บอท] score={score:.2f} w={width} {'🔴 เต็ม!' if full else '⏳ ฟาร์มอยู่...'} | 💧 น้ำอีก {int(mins // 60)}:{int(mins % 60):02d} ชม")
 
@@ -99,7 +100,7 @@ def main():
                 state["last_change"] = time.time()
 
             if full:
-                print(f"\n===== Stone เต็ม 100/100 → รอ {config.FULL_DETECTED_DELAY} วิ ก่อนเริ่มฝาก =====")
+                print(f"\n===== ไอเทมเต็มความจุ → รอ {config.FULL_DETECTED_DELAY} วิ ก่อนจัดการ =====")
                 time.sleep(config.FULL_DETECTED_DELAY)
                 if config.DEPOSIT_MODE == "discard":
                     ok = discard_items(sct)
