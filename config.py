@@ -74,13 +74,31 @@ MAP_CHECK_REGION = _region(300 / 1920, 115 / 1080, 380 / 1920, 120 / 1080)
 MAP_TEMPLATE = os.path.join(os.path.dirname(__file__), "map_template.png")
 MAP_MATCH_THRESHOLD = 0.65
 
-# ===== ตรวจว่าหน้า GARAGE (เมนูรถ) เปิดจริงหลังกด L =====
-# region ครอบคำว่า "SYSTEM GARAGE" ด้านบนซ้ายของหน้าต่าง
-# อ้างอิง 1920x1080: left=450 top=250 w=330 h=60
-GARAGE_CHECK_REGION = _region(450 / 1920, 250 / 1080, 330 / 1920, 60 / 1080)
+# ===== ตรวจว่าหน้าท้ายรถ (INVENTORY/SECONDARY) เปิดจริงหลังกด L =====
+# region ครอบหัวข้อ "INVENTORY" ด้านบนซ้ายของหน้าต่าง
+# อ้างอิง 1920x1080: left=370 top=180 w=250 h=90
+GARAGE_CHECK_REGION = _region(370 / 1920, 180 / 1080, 250 / 1920, 90 / 1080)
 GARAGE_TEMPLATE = os.path.join(os.path.dirname(__file__), "garage_template.png")
 GARAGE_MATCH_THRESHOLD = 0.70
 GARAGE_OPEN_RETRIES = 3      # กด L ซ้ำได้กี่ครั้งถ้าเมนูยังไม่เปิด
+
+# ===== โหมดเมื่อของเต็ม 100/100 =====
+# "trunk"   = ฝากเข้าท้ายรถ (กด L → ลากของ → Max → O)
+# "discard" = ทิ้งของ (กด T เปิดกระเป๋า → คลิกขวาช่องของ → Delete → Max → O)
+DEPOSIT_MODE = "discard"
+
+# --- ค่าเฉพาะโหมด discard ---
+# บริเวณช่องของในกระเป๋าส่วนตัว (หน้า INVENTORY กลางจอ หลังกด T)
+# อ้างอิง 1920x1080: left=610 top=270 w=700 h=510
+BAG_REGION = _region(610 / 1920, 270 / 1080, 700 / 1920, 510 / 1080)
+# ปุ่ม "Delete" ในเมนูคลิกขวา = จุดคลิกขวา + offset (px อ้างอิง 1080p คูณ SCALE)
+DELETE_OFFSET = (int(60 * SCALE), int(72 * SCALE))
+BAG_OPEN_DELAY = 2.5    # รอหน้ากระเป๋าเปิดหลังกด T
+MENU_OPEN_DELAY = 0.8   # รอเมนูคลิกขวา (Use/Give/Delete) เด้ง
+BAG_OPEN_RETRIES = 5    # กด T ซ้ำได้กี่ครั้งถ้ากระเป๋ายังไม่เปิด
+# region ครอบหัวข้อ "INVENTORY" ของหน้ากระเป๋า (กลางจอ) — ใช้ garage_template.png เดิม
+# อ้างอิง 1920x1080: left=840 top=180 w=250 h=90
+BAG_CHECK_REGION = _region(840 / 1920, 180 / 1080, 250 / 1920, 90 / 1080)
 
 # ===== เวลา (วินาที) — เมนูเกมเปิดช้า ปรับเพิ่ม/ลดตรงนี้ =====
 CHECK_INTERVAL = 2.0        # อ่าน counter ทุกกี่วินาทีระหว่างฟาร์ม
@@ -92,6 +110,21 @@ CLICK_DELAY = 0.8           # ดีเลย์ระหว่างคลิ�
 DRAG_DURATION = 0.8         # เวลาลากไอเทม
 AFTER_DEPOSIT_DELAY = 2.0   # รอหลังยืนยันฝากของ ก่อนกด ESC
 AFTER_CLOSE_DELAY = 1.5     # รอหลังกด ESC ก่อนเช็ค counter / กด G
+
+# ===== กินน้ำ (กด 1) ทุก 2.5 ชม =====
+# ต้องกินตอนไม่มีหน้าต่างเปิด/ไม่ได้ฟาร์มอยู่ → บอทจะกินก่อนกด G ทุกจุด
+DRINK_INTERVAL = int(2.5 * 3600)   # วินาที
+AFTER_DRINK_DELAY = 1.5     # รอหลังกด 1 ก่อนทำอย่างอื่นต่อ
+
+# เช็คว่ากินติดจริง: แถบ "Loading.." สีส้มเหนือ HUD จะขึ้นตอนกำลังกิน
+# อ้างอิง 1920x1080: left=830 top=898 w=260 h=26
+DRINK_CHECK_REGION = _region(830 / 1920, 898 / 1080, 260 / 1920, 26 / 1080)
+DRINK_LOADING_MIN_PX = 80   # px สีส้มขั้นต่ำใน region = แถบขึ้นจริง
+DRINK_RETRIES = 3           # กด 1 ซ้ำได้กี่ครั้งถ้าแถบไม่ขึ้น
+DRINK_CHECK_DELAY = 1.0     # รอแถบขึ้นหลังกด 1
+
+# ===== เช็คฟาร์มค้าง =====
+STUCK_TIMEOUT = 10.0        # ตัวเลข counter นิ่งเกินกี่วิ → กด G ย้ำ
 
 # ===== ปุ่ม =====
 KEY_TOGGLE = "f10"          # เปิด/ปิดบอท

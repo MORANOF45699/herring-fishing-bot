@@ -115,17 +115,20 @@ def is_stone_empty(sct):
     return not is_stone_full(sct)
 
 
-def find_stone_slot(sct):
+def find_stone_slot(sct, region=None):
     """
     หาตำแหน่งช่อง Stone ใน inventory ด้วย template matching
+    region: บริเวณค้นหา (default = INVENTORY_REGION ฝั่งท้ายรถ)
     Returns: (x, y) กลางช่อง หรือ None ถ้าไม่เจอ
     """
+    if region is None:
+        region = config.INVENTORY_REGION
     if not os.path.exists(config.STONE_TEMPLATE):
         print(f"[detector] ⚠ ไม่พบ {config.STONE_TEMPLATE} — รัน calibrate.py ก่อน")
         return None
 
     template = _scale_template(cv2.imread(config.STONE_TEMPLATE))
-    scene = _grab(sct, config.INVENTORY_REGION)
+    scene = _grab(sct, region)
 
     result = cv2.matchTemplate(scene, template, cv2.TM_CCOEFF_NORMED)
     _, max_val, _, max_loc = cv2.minMaxLoc(result)
@@ -135,8 +138,8 @@ def find_stone_slot(sct):
         return None
 
     th, tw = template.shape[:2]
-    x = config.INVENTORY_REGION["left"] + max_loc[0] + tw // 2
-    y = config.INVENTORY_REGION["top"] + max_loc[1] + th // 2
+    x = region["left"] + max_loc[0] + tw // 2
+    y = region["top"] + max_loc[1] + th // 2
     print(f"[detector] เจอช่อง Stone ที่ ({x}, {y}) score={max_val:.2f}")
     return (x, y)
 
@@ -176,6 +179,32 @@ def is_map_open(sct):
     """เมนู pause / แผนที่ เปิดค้างอยู่ไหม (ต้องมี map_template.png จาก calibrate)"""
     return _screen_has_template(sct, config.MAP_TEMPLATE,
                                 config.MAP_CHECK_REGION, config.MAP_MATCH_THRESHOLD)
+
+
+_counter_prev_mask = [None]
+
+
+def counter_changed(sct):
+    """ตัวเลข counter บน HUD เปลี่ยนจากครั้งก่อนไหม (เทียบ mask สีส้ม — ใช้จับฟาร์มค้าง)"""
+    mask = _orange_mask(_grab(sct, config.COUNTER_REGION))
+    prev = _counter_prev_mask[0]
+    _counter_prev_mask[0] = mask
+    if prev is None or prev.shape != mask.shape:
+        return True
+    diff = cv2.absdiff(mask, prev)
+    return cv2.countNonZero(diff) > 20   # เกิน ~20 px = เลขเปลี่ยนจริง ไม่ใช่ noise ขอบตัวอักษร
+
+
+def is_drinking(sct):
+    """แถบ Loading.. (กำลังกินน้ำ) ขึ้นอยู่ไหม — นับ px สีส้มในบริเวณแถบ"""
+    mask = _orange_mask(_grab(sct, config.DRINK_CHECK_REGION))
+    return cv2.countNonZero(mask) >= config.DRINK_LOADING_MIN_PX
+
+
+def is_bag_open(sct):
+    """หน้ากระเป๋าส่วนตัว (กด T) เปิดอยู่ไหม (ใช้ template หัวข้อ INVENTORY เดิม)"""
+    return _screen_has_template(sct, config.GARAGE_TEMPLATE,
+                                config.BAG_CHECK_REGION, config.GARAGE_MATCH_THRESHOLD)
 
 
 def is_garage_open(sct):

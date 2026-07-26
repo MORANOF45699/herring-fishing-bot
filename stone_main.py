@@ -22,8 +22,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 import config
 import stone_input as inp
-from stone_detector import full_match_score, is_map_open
-from stone_actions import deposit_to_trunk
+from stone_detector import full_match_score, is_map_open, counter_changed
+from stone_actions import deposit_to_trunk, discard_items, drink_if_due
 
 MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่ครั้งถึงหยุดบอท
 
@@ -35,7 +35,10 @@ def print_banner():
     print("วิธีใช้งาน:")
     print(f"  - กด [ {config.KEY_TOGGLE.upper()} ] เพื่อ เปิด/ปิด บอท")
     print("  - กด [ Esc ] ในคอนโซลนี้เพื่อปิดโปรแกรม")
-    print("เงื่อนไข: ต้องยืนใกล้รถ (กด L เปิดท้ายรถได้) ตลอดเวลา")
+    if config.DEPOSIT_MODE == "discard":
+        print("โหมด: ทิ้งของ (กด T → คลิกขวา → Delete → Max → O)")
+    else:
+        print("โหมด: ฝากท้ายรถ — ต้องยืนใกล้รถ (กด L เปิดท้ายรถได้) ตลอดเวลา")
     print(f"  - Check Interval: {config.CHECK_INTERVAL}s")
     print("=" * 55)
 
@@ -43,7 +46,7 @@ def print_banner():
 def main():
     print_banner()
 
-    state = {"active": False}
+    state = {"active": False, "last_change": time.time()}
 
     def toggle():
         state["active"] = not state["active"]
@@ -51,6 +54,7 @@ def main():
             print("\n[บอท] ▶ เริ่มทำงาน — กด G เริ่มออโต้ฟาร์ม")
             time.sleep(0.3)
             inp.press_g()
+            state["last_change"] = time.time()
         else:
             print("\n[บอท] ⏸ หยุดชั่วคราว")
 
@@ -77,14 +81,29 @@ def main():
                 time.sleep(1.5)
                 continue
 
+            # กินน้ำถ้าครบกำหนด — จังหวะนี้กระเป๋า/หน้าต่างปิดอยู่ (กินระหว่างฟาร์มได้)
+            drink_if_due(sct)
+
             score, width = full_match_score(sct)
             full = score >= config.FULL_MATCH_THRESHOLD and width >= config.FULL_TEXT_MIN_WIDTH
             print(f"[บอท] score={score:.2f} w={width} {'🔴 เต็ม!' if full else '⏳ ฟาร์มอยู่...'}")
 
+            # เช็คฟาร์มค้าง: ตัวเลขนิ่งเกิน STUCK_TIMEOUT → กด G ย้ำ
+            if counter_changed(sct):
+                state["last_change"] = time.time()
+            elif not full and time.time() - state["last_change"] > config.STUCK_TIMEOUT:
+                print(f"[บอท] ⚠ counter นิ่งเกิน {config.STUCK_TIMEOUT:.0f} วิ — ฟาร์มอาจค้าง กด G ย้ำ")
+                inp.press_g()
+                state["last_change"] = time.time()
+
             if full:
                 print(f"\n===== Stone เต็ม 100/100 → รอ {config.FULL_DETECTED_DELAY} วิ ก่อนเริ่มฝาก =====")
                 time.sleep(config.FULL_DETECTED_DELAY)
-                ok = deposit_to_trunk(sct)
+                if config.DEPOSIT_MODE == "discard":
+                    ok = discard_items(sct)
+                else:
+                    ok = deposit_to_trunk(sct)
+                state["last_change"] = time.time()   # กันจับค้างผิดหลังฝาก/ทิ้งเสร็จ
                 if ok:
                     deposit_fails = 0
                     print("===== ฝากเสร็จ กลับไปฟาร์มต่อ =====\n")

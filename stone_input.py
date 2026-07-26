@@ -14,6 +14,8 @@ SetCursorPos = ctypes.windll.user32.SetCursorPos
 KEY_L = 0x26
 KEY_G = 0x22
 KEY_E = 0x12
+KEY_T = 0x14
+KEY_1 = 0x02
 KEY_ESC = 0x01
 
 PUL = ctypes.POINTER(ctypes.c_ulong)
@@ -68,6 +70,8 @@ KEYEVENTF_KEYUP = 0x0002
 
 MOUSEEVENTF_LEFTDOWN = 0x0002
 MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
 MOUSEEVENTF_WHEEL = 0x0800
 WHEEL_DELTA = 120
 
@@ -127,6 +131,14 @@ def press_g():
     press_key(KEY_G)
 
 
+def press_t():
+    press_key(KEY_T)
+
+
+def press_1():
+    press_key(KEY_1)
+
+
 def press_esc():
     press_key(KEY_ESC)
 
@@ -143,6 +155,15 @@ def click(x, y, delay=0.1):
     _mouse_event(MOUSEEVENTF_LEFTDOWN)
     time.sleep(delay)
     _mouse_event(MOUSEEVENTF_LEFTUP)
+
+
+def right_click(x, y, delay=0.1):
+    """คลิกขวาที่พิกัด (เปิดเมนู Use/Give/Delete)"""
+    move_to(x, y)
+    time.sleep(0.05)
+    _mouse_event(MOUSEEVENTF_RIGHTDOWN)
+    time.sleep(delay)
+    _mouse_event(MOUSEEVENTF_RIGHTUP)
 
 
 def drag(x1, y1, x2, y2, duration=0.6, steps=25):
