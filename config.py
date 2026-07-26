@@ -119,12 +119,13 @@ AFTER_DRINK_DELAY = 1.5     # รอหลังกด 1 ก่อนทำอ�
 # เช็คว่ากินติดจริง: แถบ "Loading.." สีส้มเหนือ HUD จะขึ้นตอนกำลังกิน
 # อ้างอิง 1920x1080: left=830 top=898 w=260 h=26
 DRINK_CHECK_REGION = _region(830 / 1920, 898 / 1080, 260 / 1920, 26 / 1080)
-DRINK_LOADING_MIN_PX = 80   # px สีส้มขั้นต่ำใน region = แถบขึ้นจริง
+DRINK_LOADING_MIN_PX = max(20, int(80 * SCALE * SCALE))   # px สีส้มขั้นต่ำ (สเกลตามพื้นที่จอ)
 DRINK_RETRIES = 3           # กด 1 ซ้ำได้กี่ครั้งถ้าแถบไม่ขึ้น
 DRINK_CHECK_DELAY = 1.0     # รอแถบขึ้นหลังกด 1
 
 # ===== เช็คฟาร์มค้าง =====
 STUCK_TIMEOUT = 10.0        # ตัวเลข counter นิ่งเกินกี่วิ → กด G ย้ำ
+COUNTER_DIFF_MIN_PX = max(6, int(20 * SCALE * SCALE))   # px ต่างขั้นต่ำ = เลขเปลี่ยนจริง (สเกลตามจอ)
 
 # ===== ปุ่ม =====
 KEY_TOGGLE = "f10"          # เปิด/ปิดบอท

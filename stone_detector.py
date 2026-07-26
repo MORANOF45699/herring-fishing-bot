@@ -192,7 +192,7 @@ def counter_changed(sct):
     if prev is None or prev.shape != mask.shape:
         return True
     diff = cv2.absdiff(mask, prev)
-    return cv2.countNonZero(diff) > 20   # เกิน ~20 px = เลขเปลี่ยนจริง ไม่ใช่ noise ขอบตัวอักษร
+    return cv2.countNonZero(diff) > config.COUNTER_DIFF_MIN_PX   # เลขเปลี่ยนจริง ไม่ใช่ noise ขอบตัวอักษร
 
 
 def is_drinking(sct):

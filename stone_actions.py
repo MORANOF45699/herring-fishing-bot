@@ -19,7 +19,7 @@ from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
                             save_debug_screenshot)
 
 
-_last_drink = [0.0]   # 0 = ยังไม่เคยกิน → กินทันทีรอบแรก (เทส) แล้วค่อยนับถอยหลัง
+_last_drink = [time.time()]   # เริ่มนับตั้งแต่เปิดโปรแกรม → กินครั้งแรกหลังครบกำหนด
 
 
 def drink_if_due(sct=None):
