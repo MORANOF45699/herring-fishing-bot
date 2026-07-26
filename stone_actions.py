@@ -22,6 +22,38 @@ from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
 _last_drink = [time.time()]   # เริ่มนับตั้งแต่เปิดโปรแกรม → กินครั้งแรกหลังครบกำหนด
 
 
+def drink_remaining():
+    """เหลือกี่วินาทีถึงรอบกินน้ำถัดไป"""
+    return max(0.0, config.DRINK_INTERVAL - (time.time() - _last_drink[0]))
+
+
+def _find_slot_with_scroll(sct, region, tag):
+    """หา slot ในบริเวณ region — ไม่เจอ: เลื่อนขึ้นบนสุด แล้วไล่เลื่อนลงหาทีละนิด"""
+    cx = region["left"] + region["width"] // 2
+    cy = region["top"] + region["height"] // 2
+
+    slot = find_stone_slot(sct, region)
+    if slot is not None:
+        return slot
+
+    print(f"[{tag}] หาช่องไม่เจอ → เลื่อนขึ้นบนสุดแล้วหาใหม่")
+    inp.scroll_up(notches=10, x=cx, y=cy)
+    time.sleep(0.4)
+    slot = find_stone_slot(sct, region)
+    if slot is not None:
+        return slot
+
+    print(f"[{tag}] ยังไม่เจอ → ไล่เลื่อนลงหาทีละนิด")
+    for i in range(1, config.INV_SCROLL_RETRIES + 1):
+        inp.scroll_down(notches=2, x=cx, y=cy)
+        time.sleep(0.4)
+        slot = find_stone_slot(sct, region)
+        if slot is not None:
+            print(f"[{tag}] เจอหลังเลื่อนลง (ครั้งที่ {i})")
+            return slot
+    return None
+
+
 def drink_if_due(sct=None):
     """
     กินน้ำถ้าครบกำหนด — เรียกได้ทุกจังหวะที่กระเป๋า/หน้าต่างไม่เปิด (ฟาร์มอยู่ก็กินได้)
@@ -79,21 +111,8 @@ def deposit_to_trunk(sct):
         inp.press_esc()
         return False
 
-    # Step 2: หา slot Stone (ถ้าไม่เจอ เลื่อน inventory ขึ้นบนสุดแล้วหาใหม่)
-    inv = config.INVENTORY_REGION
-    inv_cx = inv["left"] + inv["width"] // 2
-    inv_cy = inv["top"] + inv["height"] // 2
-
-    slot = find_stone_slot(sct)
-    if slot is None:
-        print("[ฝาก] หาช่อง Stone ไม่เจอ → เลื่อน inventory ขึ้นบนสุดแล้วหาใหม่")
-        for i in range(1, config.INV_SCROLL_RETRIES + 1):
-            inp.scroll_up(notches=5, x=inv_cx, y=inv_cy)
-            time.sleep(0.4)
-            slot = find_stone_slot(sct)
-            if slot is not None:
-                print(f"[ฝาก] เจอหลังเลื่อนขึ้น (ครั้งที่ {i})")
-                break
+    # Step 2: หา slot Stone (เลื่อนขึ้นบนสุด แล้วไล่เลื่อนลงถ้ายังไม่เจอ)
+    slot = _find_slot_with_scroll(sct, config.INVENTORY_REGION, "ฝาก")
 
     if slot is None:
         save_debug_screenshot(sct, "no_stone_slot")
@@ -161,21 +180,8 @@ def discard_items(sct):
         inp.press_esc()
         return False
 
-    # Step 2: หาช่องของในกระเป๋า (เลื่อนขึ้นถ้าไม่เจอ)
-    bag = config.BAG_REGION
-    cx = bag["left"] + bag["width"] // 2
-    cy = bag["top"] + bag["height"] // 2
-
-    slot = find_stone_slot(sct, bag)
-    if slot is None:
-        print("[ทิ้ง] หาช่องของไม่เจอ → เลื่อนกระเป๋าขึ้นบนสุดแล้วหาใหม่")
-        for i in range(1, config.INV_SCROLL_RETRIES + 1):
-            inp.scroll_up(notches=5, x=cx, y=cy)
-            time.sleep(0.4)
-            slot = find_stone_slot(sct, bag)
-            if slot is not None:
-                print(f"[ทิ้ง] เจอหลังเลื่อนขึ้น (ครั้งที่ {i})")
-                break
+    # Step 2: หาช่องของในกระเป๋า (เลื่อนขึ้นบนสุด แล้วไล่เลื่อนลงถ้ายังไม่เจอ)
+    slot = _find_slot_with_scroll(sct, config.BAG_REGION, "ทิ้ง")
 
     if slot is None:
         save_debug_screenshot(sct, "no_stone_slot_bag")

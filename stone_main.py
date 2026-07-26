@@ -23,7 +23,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 import config
 import stone_input as inp
 from stone_detector import full_match_score, is_map_open, counter_changed
-from stone_actions import deposit_to_trunk, discard_items, drink_if_due
+from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
+                           drink_remaining)
 
 MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่ครั้งถึงหยุดบอท
 
@@ -86,7 +87,8 @@ def main():
 
             score, width = full_match_score(sct)
             full = score >= config.FULL_MATCH_THRESHOLD and width >= config.FULL_TEXT_MIN_WIDTH
-            print(f"[บอท] score={score:.2f} w={width} {'🔴 เต็ม!' if full else '⏳ ฟาร์มอยู่...'}")
+            mins = drink_remaining() / 60
+            print(f"[บอท] score={score:.2f} w={width} {'🔴 เต็ม!' if full else '⏳ ฟาร์มอยู่...'} | 💧 น้ำอีก {int(mins // 60)}:{int(mins % 60):02d} ชม")
 
             # เช็คฟาร์มค้าง: ตัวเลขนิ่งเกิน STUCK_TIMEOUT → กด G ย้ำ
             if counter_changed(sct):
