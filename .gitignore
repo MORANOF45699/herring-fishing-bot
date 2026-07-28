@@ -14,3 +14,4 @@ full_template_debug.png
 
 # ไฟล์ชั่วคราว
 *.log
+bot_log.txt
