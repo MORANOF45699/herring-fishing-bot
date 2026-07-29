@@ -109,11 +109,7 @@ def bot_loop():
                     deposit_fails = 0
                 else:
                     deposit_fails += 1
-                    set_status(f"⚠ ฝากพลาด ({deposit_fails}/{MAX_DEPOSIT_FAILS})", "#e74c3c")
-                    if deposit_fails >= MAX_DEPOSIT_FAILS:
-                        set_status("✗ พลาดซ้ำ — หยุด (F10 เริ่มใหม่)", "#e74c3c")
-                        state["active"] = False
-                        deposit_fails = 0
+                    set_status(f"⚠ ฝากพลาด ({deposit_fails}) — ลองใหม่เรื่อย ๆ", "#e74c3c")
                 time.sleep(1.0)
 
             time.sleep(config.CHECK_INTERVAL)

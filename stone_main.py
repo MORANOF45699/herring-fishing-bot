@@ -112,11 +112,7 @@ def main():
                     print("===== ฝากเสร็จ กลับไปฟาร์มต่อ =====\n")
                 else:
                     deposit_fails += 1
-                    print(f"[บอท] ⚠ ฝากไม่สำเร็จ ({deposit_fails}/{MAX_DEPOSIT_FAILS})")
-                    if deposit_fails >= MAX_DEPOSIT_FAILS:
-                        print("[บอท] ✗ ฝากพลาดติดกันหลายครั้ง — หยุดบอท (กด F10 เริ่มใหม่)")
-                        state["active"] = False
-                        deposit_fails = 0
+                    print(f"[บอท] ⚠ ฝากไม่สำเร็จ ({deposit_fails}) — ลองใหม่เรื่อย ๆ จนกว่าจะกด F10 หยุดเอง")
                 time.sleep(1.0)
 
             time.sleep(config.CHECK_INTERVAL)
