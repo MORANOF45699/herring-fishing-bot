@@ -155,8 +155,15 @@ def main():
         label.config(text=status["text"], fg=status["color"])
         root.after(300, refresh)
 
+    def keep_top():
+        # เกมชอบแย่ง z-order → ดัน HUD ขึ้นบนสุดซ้ำเรื่อย ๆ
+        root.attributes("-topmost", True)
+        root.lift()
+        root.after(2000, keep_top)
+
     threading.Thread(target=bot_loop, daemon=True).start()
     refresh()
+    keep_top()
     root.mainloop()
 
 
