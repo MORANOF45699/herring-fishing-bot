@@ -143,6 +143,49 @@ def press_esc():
     press_key(KEY_ESC)
 
 
+GAME_WINDOW_TITLE = "FiveM"
+KEY_ALT = 0x38
+
+user32 = ctypes.windll.user32
+
+
+def _find_game_hwnd():
+    """หา hwnd หน้าต่างเกม (ชื่อมีคำว่า FiveM)"""
+    found = []
+
+    @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    def cb(hwnd, _):
+        n = user32.GetWindowTextLengthW(hwnd)
+        if n:
+            buf = ctypes.create_unicode_buffer(n + 1)
+            user32.GetWindowTextW(hwnd, buf, n + 1)
+            if GAME_WINDOW_TITLE in buf.value:
+                found.append(hwnd)
+                return False
+        return True
+
+    user32.EnumWindows(cb, None)
+    return found[0] if found else None
+
+
+def focus_game():
+    """ดึงหน้าต่างเกมกลับ foreground (กันเมาส์/โฟกัสหลุดไปหน้าต่างอื่น)"""
+    hwnd = _find_game_hwnd()
+    if not hwnd:
+        return False
+    if user32.GetForegroundWindow() == hwnd:
+        return True
+    print("[input] โฟกัสหลุดจากเกม → ดึงหน้าต่างเกมกลับมา")
+    if user32.IsIconic(hwnd):
+        user32.ShowWindow(hwnd, 9)          # SW_RESTORE
+    # กด ALT หลอกก่อน ปลดข้อจำกัด SetForegroundWindow
+    _key_event(KEY_ALT, KEYEVENTF_SCANCODE)
+    user32.SetForegroundWindow(hwnd)
+    _key_event(KEY_ALT, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP)
+    time.sleep(0.4)
+    return user32.GetForegroundWindow() == hwnd
+
+
 def move_to(x, y):
     """เลื่อน cursor ไปพิกัดหน้าจอ (สำหรับ UI ที่มี cursor)"""
     SetCursorPos(int(x), int(y))

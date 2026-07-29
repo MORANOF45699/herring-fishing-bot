@@ -15,8 +15,17 @@ import time
 import config
 import stone_input as inp
 from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
-                            is_bag_open, is_drinking, template_available,
-                            save_debug_screenshot)
+                            is_bag_open, is_drinking, is_map_open,
+                            template_available, save_debug_screenshot)
+
+
+def _recover(sct):
+    """กู้สถานะก่อนลองใหม่: แผนที่/เมนูค้าง → ESC, โฟกัสหลุด → ดึงเกมกลับ"""
+    if is_map_open(sct):
+        print("[กู้] เจอแผนที่/เมนูค้าง → กด ESC ปิด")
+        inp.press_esc()
+        time.sleep(1.0)
+    inp.focus_game()
 
 
 _last_drink = [time.time()]   # เริ่มนับตั้งแต่เปิดโปรแกรม → กินครั้งแรกหลังครบกำหนด
@@ -86,6 +95,8 @@ def deposit_to_trunk(sct):
     ฝากหินทั้งหมดเข้าท้ายรถ แล้วกลับไปฟาร์ม
     Returns: True ถ้าสำเร็จ
     """
+    inp.focus_game()
+
     # Step 1: กด L เปิดท้ายรถ + ยืนยันว่าเปิดจริง (กด L ซ้ำถ้ายังไม่ขึ้น)
     check_garage = template_available(config.GARAGE_TEMPLATE)
     if not check_garage:
@@ -103,7 +114,8 @@ def deposit_to_trunk(sct):
             print("[ฝาก] ✓ หน้าท้ายรถเปิดแล้ว")
             opened = True
             break
-        print("[ฝาก] ⚠ หน้าท้ายรถยังไม่เปิด — ลองกด L ใหม่")
+        print("[ฝาก] ⚠ หน้าท้ายรถยังไม่เปิด — กู้สถานะแล้วลองกด L ใหม่")
+        _recover(sct)
 
     if not opened:
         save_debug_screenshot(sct, "garage_not_open")
@@ -155,6 +167,8 @@ def discard_items(sct):
     Flow: กด T เปิดกระเป๋า → คลิกขวาช่องของ → Delete → Max → O → ESC → G
     Returns: True ถ้าสำเร็จ
     """
+    inp.focus_game()
+
     # Step 1: กด T เปิดกระเป๋า + ยืนยันว่าเปิดจริง (กด T ซ้ำถ้ายังไม่ขึ้น)
     check_bag = template_available(config.GARAGE_TEMPLATE)
     if not check_bag:
@@ -172,7 +186,8 @@ def discard_items(sct):
             print("[ทิ้ง] ✓ หน้ากระเป๋าเปิดแล้ว")
             opened = True
             break
-        print("[ทิ้ง] ⚠ หน้ากระเป๋ายังไม่เปิด — ลองกด T ใหม่")
+        print("[ทิ้ง] ⚠ หน้ากระเป๋ายังไม่เปิด — กู้สถานะแล้วลองกด T ใหม่")
+        _recover(sct)
 
     if not opened:
         save_debug_screenshot(sct, "bag_not_open")
