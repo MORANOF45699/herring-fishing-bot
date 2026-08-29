@@ -16,6 +16,7 @@ KEY_G = 0x22
 KEY_E = 0x12
 KEY_T = 0x14
 KEY_1 = 0x02
+KEY_2 = 0x03
 KEY_ESC = 0x01
 
 PUL = ctypes.POINTER(ctypes.c_ulong)
@@ -139,6 +140,10 @@ def press_1():
     press_key(KEY_1)
 
 
+def press_2():
+    press_key(KEY_2)
+
+
 def press_esc():
     press_key(KEY_ESC)
 
@@ -194,16 +199,16 @@ def move_to(x, y):
 def click(x, y, delay=0.1):
     """คลิกซ้ายที่พิกัด"""
     move_to(x, y)
-    time.sleep(0.05)
+    time.sleep(0.15)  # รอให้เกมรับตำแหน่ง cursor ก่อนคลิก
     _mouse_event(MOUSEEVENTF_LEFTDOWN)
     time.sleep(delay)
     _mouse_event(MOUSEEVENTF_LEFTUP)
 
 
-def right_click(x, y, delay=0.1):
+def right_click(x, y, delay=0.15):
     """คลิกขวาที่พิกัด (เปิดเมนู Use/Give/Delete)"""
     move_to(x, y)
-    time.sleep(0.05)
+    time.sleep(0.25)  # รอให้เกมรับตำแหน่ง cursor ก่อนคลิกขวา (สำคัญมาก)
     _mouse_event(MOUSEEVENTF_RIGHTDOWN)
     time.sleep(delay)
     _mouse_event(MOUSEEVENTF_RIGHTUP)

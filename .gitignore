@@ -15,3 +15,6 @@ full_template_debug.png
 # ไฟล์ชั่วคราว
 *.log
 bot_log.txt
+
+# ตัวติดตั้ง Python (ไม่ใช่ซอร์ส)
+*.msix

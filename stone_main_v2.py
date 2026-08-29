@@ -4,6 +4,7 @@ stone_main_v2.py - บอทเก็บไอเทม เวอร์ชัน
 รันผ่าน run_v2.bat (pythonw = ไม่มีหน้าต่างดำ)
   - HUD มุมบนซ้าย บอกสถานะ ลากย้ายตำแหน่งได้
   - กด F10 เริ่ม/พัก เหมือนเดิม
+  - กด F11 ซ่อน/แสดง HUD (toggle)
   - ดับเบิลคลิกขวาที่ HUD = ปิดโปรแกรม
   - log ทั้งหมดเขียนลง bot_log.txt แทนคอนโซล
 หมายเหตุ: เกมต้องเป็น Borderless/Windowed — Fullscreen แท้ HUD จะไม่ลอยทับ
@@ -32,11 +33,11 @@ import stone_input as inp
 from stone_detector import (full_match_score, full_min_width, is_map_open,
                             counter_changed)
 from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
-                           drink_remaining)
+                           drink_remaining, eat_if_due, eat_remaining)
 
 MAX_DEPOSIT_FAILS = 2
 
-status = {"text": "พร้อม — กด F10 เริ่ม", "color": "#cccccc"}
+status = {"text": "พร้อม — กด F10 เริ่ม (F11 Toggle HUD)", "color": "#cccccc"}
 stop_flag = [False]
 
 
@@ -77,17 +78,20 @@ def bot_loop():
                 continue
 
             drink_if_due(sct)
+            eat_if_due(sct)
 
             score, width = full_match_score(sct)
             full = (score >= config.FULL_MATCH_THRESHOLD
                     and width >= full_min_width())
 
-            mins = drink_remaining() / 60
-            water = f"💧{int(mins // 60)}:{int(mins % 60):02d}"
+            water_str = f"💧{int(drink_remaining() / 60 // 60)}:{int(drink_remaining() / 60 % 60):02d}" if config.ENABLE_DRINK else "💧OFF"
+            food_str = f"🍚{int(eat_remaining() / 60 // 60)}:{int(eat_remaining() / 60 % 60):02d}" if config.ENABLE_EAT else "🍚OFF"
+            hud_str = f"{water_str} | {food_str}"
+
             if full:
-                set_status(f"🔴 เต็ม! กำลังจัดการ | {water}", "#e74c3c")
+                set_status(f"🔴 เต็ม! กำลังจัดการ | {hud_str}", "#e74c3c")
             else:
-                set_status(f"⛏ ฟาร์ม {score:.2f} | {water}", "#2ecc71")
+                set_status(f"⛏ ฟาร์ม {score:.2f} | {hud_str}", "#2ecc71")
 
             if counter_changed(sct):
                 state["last_change"] = time.time()
@@ -156,6 +160,22 @@ def main():
         root.attributes("-topmost", True)
         root.lift()
         root.after(2000, keep_top)
+
+    hud_visible = [True]
+
+    def toggle_hud():
+        def run():
+            if hud_visible[0]:
+                root.withdraw()
+                hud_visible[0] = False
+                print("[v2] ซ่อน HUD (hidden)")
+            else:
+                root.deiconify()
+                hud_visible[0] = True
+                print("[v2] แสดง HUD (shown)")
+        root.after(0, run)
+
+    keyboard.add_hotkey(config.KEY_TOGGLE_HUD, toggle_hud)
 
     threading.Thread(target=bot_loop, daemon=True).start()
     refresh()

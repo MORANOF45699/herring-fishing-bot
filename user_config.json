@@ -1,0 +1,8 @@
+{
+    "ENABLE_DRINK": true,
+    "DRINK_INTERVAL_MIN": 150.0,
+    "ENABLE_EAT": false,
+    "EAT_INTERVAL_MIN": 150.0,
+    "DEPOSIT_MODE": "discard",
+    "CHECK_INTERVAL": 4.0
+}

@@ -111,10 +111,14 @@ DRAG_DURATION = 0.8         # เวลาลากไอเทม
 AFTER_DEPOSIT_DELAY = 2.0   # รอหลังยืนยันฝากของ ก่อนกด ESC
 AFTER_CLOSE_DELAY = 1.5     # รอหลังกด ESC ก่อนเช็ค counter / กด G
 
-# ===== กินน้ำ (กด 1) ทุก 2.5 ชม =====
-# ต้องกินตอนไม่มีหน้าต่างเปิด/ไม่ได้ฟาร์มอยู่ → บอทจะกินก่อนกด G ทุกจุด
+# ===== กินน้ำ (กด 1) และ กินข้าว (กด 2) =====
+ENABLE_DRINK = True
 DRINK_INTERVAL = int(2.5 * 3600)   # วินาที
 AFTER_DRINK_DELAY = 1.5     # รอหลังกด 1 ก่อนทำอย่างอื่นต่อ
+
+ENABLE_EAT = True
+EAT_INTERVAL = int(2.5 * 3600)     # วินาที
+AFTER_EAT_DELAY = 1.5       # รอหลังกด 2 ก่อนทำอย่างอื่นต่อ
 
 # เช็คว่ากินติดจริง: แถบ "Loading.." สีส้มเหนือ HUD จะขึ้นตอนกำลังกิน
 # อ้างอิง 1920x1080: left=830 top=898 w=260 h=26
@@ -129,6 +133,7 @@ COUNTER_DIFF_MIN_PX = max(6, int(20 * SCALE * SCALE))   # px ต่างขั�
 
 # ===== ปุ่ม =====
 KEY_TOGGLE = "f10"          # เปิด/ปิดบอท
+KEY_TOGGLE_HUD = "f11"      # เปิด/ปิด HUD (toggle)
 
 
 def _load_calibration():
@@ -148,6 +153,39 @@ def _load_calibration():
 
 
 _load_calibration()
+
+
+def _load_user_config():
+    """โหลด user_config.json เพื่อ override ค่ากินข้าว/น้ำ และโหมดฝากของ"""
+    path = os.path.join(os.path.dirname(__file__), "user_config.json")
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        g = globals()
+        
+        # Override Boolean flags
+        for key in ("ENABLE_DRINK", "ENABLE_EAT"):
+            if key in data:
+                g[key] = bool(data[key])
+        
+        # Override intervals (in minutes in JSON, convert to seconds in config)
+        if "DRINK_INTERVAL_MIN" in data:
+            g["DRINK_INTERVAL"] = int(float(data["DRINK_INTERVAL_MIN"]) * 60)
+        if "EAT_INTERVAL_MIN" in data:
+            g["EAT_INTERVAL"] = int(float(data["EAT_INTERVAL_MIN"]) * 60)
+            
+        # Override deposit mode & scan interval
+        if "DEPOSIT_MODE" in data:
+            g["DEPOSIT_MODE"] = str(data["DEPOSIT_MODE"])
+        if "CHECK_INTERVAL" in data:
+            g["CHECK_INTERVAL"] = float(data["CHECK_INTERVAL"])
+    except Exception as e:
+        print(f"[config] ⚠ ไม่สามารถโหลด user_config.json ได้: {e}")
+
+
+_load_user_config()
 
 if __name__ == "__main__":
     import sys

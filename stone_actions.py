@@ -15,7 +15,7 @@ import time
 import config
 import stone_input as inp
 from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
-                            is_bag_open, is_drinking, is_map_open,
+                            is_bag_open, is_drinking, is_eating, is_map_open,
                             template_available, save_debug_screenshot)
 
 
@@ -29,11 +29,17 @@ def _recover(sct):
 
 
 _last_drink = [time.time()]   # เริ่มนับตั้งแต่เปิดโปรแกรม → กินครั้งแรกหลังครบกำหนด
+_last_eat = [time.time()]     # เริ่มนับตั้งแต่เปิดโปรแกรม → กินข้าวครั้งแรกหลังครบกำหนด
 
 
 def drink_remaining():
     """เหลือกี่วินาทีถึงรอบกินน้ำถัดไป"""
     return max(0.0, config.DRINK_INTERVAL - (time.time() - _last_drink[0]))
+
+
+def eat_remaining():
+    """เหลือกี่วินาทีถึงรอบกินข้าวถัดไป"""
+    return max(0.0, config.EAT_INTERVAL - (time.time() - _last_eat[0]))
 
 
 def _find_slot_with_scroll(sct, region, tag):
@@ -68,6 +74,9 @@ def drink_if_due(sct=None):
     กินน้ำถ้าครบกำหนด — เรียกได้ทุกจังหวะที่กระเป๋า/หน้าต่างไม่เปิด (ฟาร์มอยู่ก็กินได้)
     กด 1 ย้ำ 2 ทีต่อรอบ แล้วเช็คแถบ Loading.. ว่ากินติดจริง — ไม่ขึ้นลองใหม่
     """
+    if not config.ENABLE_DRINK:
+        return
+
     now = time.time()
     remaining = config.DRINK_INTERVAL - (now - _last_drink[0])
     if remaining > 0:
@@ -88,6 +97,36 @@ def drink_if_due(sct=None):
 
     _last_drink[0] = now
     time.sleep(config.AFTER_DRINK_DELAY)
+
+
+def eat_if_due(sct=None):
+    """
+    กินข้าวถ้าครบกำหนด — เรียกได้ทุกจังหวะที่กระเป๋า/หน้าต่างไม่เปิด
+    กด 2 ย้ำ 2 ทีต่อรอบ แล้วเช็คแถบ Loading.. ว่ากินติดจริง
+    """
+    if not config.ENABLE_EAT:
+        return
+
+    now = time.time()
+    remaining = config.EAT_INTERVAL - (now - _last_eat[0])
+    if remaining > 0:
+        return
+
+    for attempt in range(1, config.DRINK_RETRIES + 1):
+        print(f"[ข้าว] ครบกำหนด — กด 2 ย้ำ 2 ที (รอบที่ {attempt})")
+        inp.press_2()
+        time.sleep(0.3)
+        inp.press_2()
+        time.sleep(config.DRINK_CHECK_DELAY)
+        if sct is None:
+            break
+        if is_eating(sct):
+            print("[ข้าว] ✓ แถบ Loading ขึ้น — กินติดแล้ว")
+            break
+        print("[ข้าว] ⚠ แถบ Loading ไม่ขึ้น — ลองใหม่")
+
+    _last_eat[0] = now
+    time.sleep(config.AFTER_EAT_DELAY)
 
 
 def deposit_to_trunk(sct):

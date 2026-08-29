@@ -213,6 +213,11 @@ def is_drinking(sct):
     return cv2.countNonZero(mask) >= config.DRINK_LOADING_MIN_PX
 
 
+def is_eating(sct):
+    """แถบ Loading.. (กำลังกินข้าว) ขึ้นอยู่ไหม — ใช้เงื่อนไขเดียวกับกินน้ำเพราะใช้แถบ Loading เดียวกัน"""
+    return is_drinking(sct)
+
+
 def is_bag_open(sct):
     """หน้ากระเป๋าส่วนตัว (กด T) เปิดอยู่ไหม (ใช้ template หัวข้อ INVENTORY เดิม)"""
     return _screen_has_template(sct, config.GARAGE_TEMPLATE,

@@ -25,7 +25,7 @@ import config
 import stone_input as inp
 from stone_detector import full_match_score, full_min_width, is_map_open, counter_changed
 from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
-                           drink_remaining)
+                           drink_remaining, eat_if_due, eat_remaining)
 
 MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่ครั้งถึงหยุดบอท
 
@@ -41,11 +41,45 @@ def print_banner():
         print("โหมด: ทิ้งของ (กด T → คลิกขวา → Delete → Max → O)")
     else:
         print("โหมด: ฝากท้ายรถ — ต้องยืนใกล้รถ (กด L เปิดท้ายรถได้) ตลอดเวลา")
+    
+    drink_status = f"เปิด ({config.DRINK_INTERVAL/60:.1f} นาที)" if config.ENABLE_DRINK else "ปิด"
+    eat_status = f"เปิด ({config.EAT_INTERVAL/60:.1f} นาที)" if config.ENABLE_EAT else "ปิด"
+    print(f"  - ระบบกินน้ำ (ปุ่ม 1): {drink_status}")
+    print(f"  - ระบบกินข้าว (ปุ่ม 2): {eat_status}")
     print(f"  - Check Interval: {config.CHECK_INTERVAL}s")
     print("=" * 55)
 
 
 def main():
+    try:
+        print("\n--- ตั้งค่าระบบ กินน้ำ (ปุ่ม 1) / กินข้าว (ปุ่ม 2) ---")
+        
+        drink_enable = input("เปิดใช้งานระบบกินน้ำหรือไม่? (y/n) [ค่าเริ่มต้น: y]: ").strip().lower()
+        if drink_enable == 'n':
+            config.ENABLE_DRINK = False
+            print("-> ปิดระบบกินน้ำ")
+        else:
+            config.ENABLE_DRINK = True
+            drink_val = input(f"ตั้งเวลากินน้ำ (นาที) [ค่าเริ่มต้น {config.DRINK_INTERVAL/60:.1f} นาที]: ").strip()
+            if drink_val:
+                config.DRINK_INTERVAL = int(float(drink_val) * 60)
+                print(f"-> ตั้งเวลากินน้ำเป็น: {float(drink_val):.2f} นาที")
+        
+        eat_enable = input("เปิดใช้งานระบบกินข้าวหรือไม่? (y/n) [ค่าเริ่มต้น: y]: ").strip().lower()
+        if eat_enable == 'n':
+            config.ENABLE_EAT = False
+            print("-> ปิดระบบกินข้าว")
+        else:
+            config.ENABLE_EAT = True
+            eat_val = input(f"ตั้งเวลากินข้าว (นาที) [ค่าเริ่มต้น {config.EAT_INTERVAL/60:.1f} นาที]: ").strip()
+            if eat_val:
+                config.EAT_INTERVAL = int(float(eat_val) * 60)
+                print(f"-> ตั้งเวลากินข้าวเป็น: {float(eat_val):.2f} นาที")
+        
+        print("--------------------------------------------------\n")
+    except Exception as e:
+        print(f"ใช้ค่าเริ่มต้นเนื่องจากเกิดข้อผิดพลาดในการตั้งค่า: {e}")
+
     print_banner()
 
     state = {"active": False, "last_change": time.time()}
@@ -83,13 +117,26 @@ def main():
                 time.sleep(1.5)
                 continue
 
-            # กินน้ำถ้าครบกำหนด — จังหวะนี้กระเป๋า/หน้าต่างปิดอยู่ (กินระหว่างฟาร์มได้)
+            # กินน้ำ/ข้าวถ้าครบกำหนด — จังหวะนี้กระเป๋า/หน้าต่างปิดอยู่ (กินระหว่างฟาร์มได้)
             drink_if_due(sct)
+            eat_if_due(sct)
 
             score, width = full_match_score(sct)
             full = score >= config.FULL_MATCH_THRESHOLD and width >= full_min_width()
-            mins = drink_remaining() / 60
-            print(f"[บอท] score={score:.2f} w={width} {'🔴 เต็ม!' if full else '⏳ ฟาร์มอยู่...'} | 💧 น้ำอีก {int(mins // 60)}:{int(mins % 60):02d} ชม")
+
+            if config.ENABLE_DRINK:
+                mins_w = drink_remaining() / 60
+                water_str = f"💧 น้ำอีก {int(mins_w // 60)}:{int(mins_w % 60):02d} ชม"
+            else:
+                water_str = "💧 น้ำปิด"
+
+            if config.ENABLE_EAT:
+                mins_f = eat_remaining() / 60
+                food_str = f"🍚 ข้าวอีก {int(mins_f // 60)}:{int(mins_f % 60):02d} ชม"
+            else:
+                food_str = "🍚 ข้าวปิด"
+
+            print(f"[บอท] score={score:.2f} w={width} {'🔴 เต็ม!' if full else '⏳ ฟาร์มอยู่...'} | {water_str} | {food_str}")
 
             # เช็คฟาร์มค้าง: ตัวเลขนิ่งเกิน STUCK_TIMEOUT → กด G ย้ำ
             if counter_changed(sct):
