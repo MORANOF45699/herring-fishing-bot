@@ -168,16 +168,29 @@ def trunk_known_full():
     return True
 
 
-def _cancel_before_open(tag):
+_last_cancel = [0.0]          # กด X ครั้งล่าสุดเมื่อไหร่ (กันกดซ้ำถี่ ๆ)
+
+
+def cancel_farm(tag="บอท", force=False):
     """
-    กด X ยกเลิกแอนิเมชันฟาร์มก่อน 1 ครั้ง แล้วค่อยเปิดกระเป๋า/ท้ายรถ
-    ตัวละครที่ยังค้างอยู่กลางแอนิเมชันจะกด L/T ไม่ติด
+    กด X ยกเลิกฟาร์ม 1 ครั้ง
+    เรียกตอนของเต็ม (ก่อนเปิดกระเป๋า/ท้ายรถ) — ตัวละครที่ยังค้างกลางแอนิเมชัน
+    จะกด L/T ไม่ติด
+    กดซ้ำภายใน CANCEL_REPEAT_GUARD วิ จะข้ามให้ ไม่ต้องเสียเวลารอซ้ำ
     """
     if not config.CANCEL_BEFORE_OPEN:
         return
-    print(f"[{tag}] กด X ยกเลิกก่อน 1 ครั้ง")
+    now = time.time()
+    if not force and now - _last_cancel[0] < config.CANCEL_REPEAT_GUARD:
+        return
+    print(f"[{tag}] กด X ยกเลิกฟาร์ม")
     inp.press_x()
+    _last_cancel[0] = now
     time.sleep(config.CANCEL_KEY_DELAY)
+
+
+def _cancel_before_open(tag):
+    cancel_farm(tag)
 
 
 def _fallback_discard(sct, reason):

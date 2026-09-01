@@ -26,7 +26,7 @@ import stone_input as inp
 from stone_detector import full_match_score, full_min_width, is_map_open, counter_changed
 from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
                            drink_remaining, eat_if_due, eat_remaining,
-                           request_abort, clear_abort)
+                           request_abort, clear_abort, cancel_farm)
 
 MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่ครั้งถึงหยุดบอท
 
@@ -195,6 +195,8 @@ def main():
 
             if full:
                 print(f"\n===== ไอเทมเต็มความจุ → รอ {config.FULL_DETECTED_DELAY} วิ ก่อนจัดการ =====")
+                inp.focus_game()
+                cancel_farm("บอท", force=True)   # เต็มแล้ว หยุดฟาร์มก่อนเลย
                 time.sleep(config.FULL_DETECTED_DELAY)
                 if config.DEPOSIT_MODE == "discard":
                     ok = discard_items(sct)

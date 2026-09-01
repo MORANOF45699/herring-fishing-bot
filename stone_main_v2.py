@@ -34,7 +34,7 @@ from stone_detector import (full_match_score, full_min_width, is_map_open,
                             counter_changed)
 from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
                            drink_remaining, eat_if_due, eat_remaining,
-                           request_abort, clear_abort)
+                           request_abort, clear_abort, cancel_farm)
 
 MAX_DEPOSIT_FAILS = 2
 
@@ -138,6 +138,8 @@ def bot_loop():
                 state["last_change"] = time.time()
 
             if full:
+                inp.focus_game()
+                cancel_farm("v2", force=True)    # เต็มแล้ว หยุดฟาร์มก่อนเลย
                 time.sleep(config.FULL_DETECTED_DELAY)
                 set_status("📦 กำลังฝาก/ทิ้งของ...", "#3498db")
                 if config.DEPOSIT_MODE == "discard":
