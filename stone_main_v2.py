@@ -77,11 +77,25 @@ def bot_loop():
     keyboard.add_hotkey(config.KEY_TOGGLE, toggle)
 
     deposit_fails = 0
+    cr = config.COUNTER_REGION
+    counter_cx = cr["left"] + cr["width"] // 2
+    counter_cy = cr["top"] + cr["height"] // 2
+    covered = [False]
+
     with mss.mss() as sct:
         while not stop_flag[0]:
             if not state["active"]:
                 time.sleep(0.2)
                 continue
+
+            # เกมไม่ต้องโฟกัสก็อ่าน counter ได้ แต่ต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
+            if not inp.game_covers_point(counter_cx, counter_cy):
+                if not covered[0]:
+                    set_status("⏸ เกมโดนบัง — รอจนเห็น HUD", "#f39c12")
+                    covered[0] = True
+                time.sleep(config.CHECK_INTERVAL)
+                continue
+            covered[0] = False
 
             if is_map_open(sct):
                 set_status("⚠ เมนูค้าง — ปิดแล้วฟาร์มต่อ", "#f39c12")

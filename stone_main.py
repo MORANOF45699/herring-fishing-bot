@@ -116,6 +116,10 @@ def main():
     keyboard.add_hotkey(config.KEY_TOGGLE, toggle)
 
     deposit_fails = 0
+    cr = config.COUNTER_REGION
+    counter_cx = cr["left"] + cr["width"] // 2
+    counter_cy = cr["top"] + cr["height"] // 2
+    covered = [False]
 
     with mss.mss() as sct:
         while True:
@@ -126,6 +130,17 @@ def main():
             if not state["active"]:
                 time.sleep(0.2)
                 continue
+
+            # เกมไม่ต้องโฟกัสก็อ่าน counter ได้ แต่ต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
+            if not inp.game_covers_point(counter_cx, counter_cy):
+                if not covered[0]:
+                    print("[บอท] ⏸ หน้าต่างอื่นบังเกม (หรือเกมถูกย่อ) — รอจนเห็น HUD")
+                    covered[0] = True
+                time.sleep(config.CHECK_INTERVAL)
+                continue
+            if covered[0]:
+                print("[บอท] ▶ เห็น HUD แล้ว — อ่าน counter ต่อ")
+                covered[0] = False
 
             # กันเคส ESC พลาดไปเปิดแผนที่/เมนู → ปิดแล้วฟาร์มต่อ
             if is_map_open(sct):

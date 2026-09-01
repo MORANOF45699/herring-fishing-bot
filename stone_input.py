@@ -154,6 +154,22 @@ KEY_ALT = 0x38
 user32 = ctypes.windll.user32
 
 
+class POINT(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+
+# ประกาศชนิดค่าคืน/พารามิเตอร์ให้ถูก — ไม่งั้น HWND 64-bit โดนตัดเหลือ 32-bit
+user32.GetForegroundWindow.restype = ctypes.c_void_p
+user32.WindowFromPoint.restype = ctypes.c_void_p
+user32.WindowFromPoint.argtypes = [POINT]
+user32.GetAncestor.restype = ctypes.c_void_p
+user32.GetAncestor.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+user32.IsWindow.argtypes = [ctypes.c_void_p]
+user32.IsIconic.argtypes = [ctypes.c_void_p]
+user32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
+user32.SwitchToThisWindow.argtypes = [ctypes.c_void_p, ctypes.c_bool]
+
+
 def _find_game_hwnd():
     """หา hwnd หน้าต่างเกม (ชื่อมีคำว่า FiveM)"""
     found = []
@@ -171,6 +187,39 @@ def _find_game_hwnd():
 
     user32.EnumWindows(cb, None)
     return found[0] if found else None
+
+
+def get_foreground():
+    """hwnd ของหน้าต่างที่กำลังโฟกัสอยู่ (ไว้จำไว้คืนทีหลัง)"""
+    return user32.GetForegroundWindow()
+
+
+def restore_foreground(hwnd):
+    """คืนโฟกัสให้หน้าต่างเดิมที่ผู้ใช้ทำงานอยู่ก่อนบอทแย่งไป"""
+    if not hwnd or hwnd == user32.GetForegroundWindow():
+        return
+    if not user32.IsWindow(hwnd):
+        return
+    user32.SwitchToThisWindow(hwnd, True)
+
+
+def game_covers_point(x, y):
+    """
+    จุด (x, y) บนจอเป็นของหน้าต่างเกมไหม
+    ใช้เช็คว่ามีหน้าต่างอื่นบังเกมอยู่หรือเปล่า — จับภาพหน้าจอจะได้ไม่อ่านของผิดหน้าต่าง
+    """
+    hwnd = _find_game_hwnd()
+    if not hwnd:
+        return False
+    if user32.IsIconic(hwnd):        # เกมถูกย่อ → จับภาพไม่ได้เลย
+        return False
+
+    top = user32.WindowFromPoint(POINT(int(x), int(y)))
+    if not top:
+        return False
+    # WindowFromPoint คืน child window ได้ → ไล่ขึ้นไปหา top-level แล้วเทียบ
+    root = user32.GetAncestor(top, 2)     # GA_ROOT
+    return root == hwnd or top == hwnd
 
 
 def is_game_focused():

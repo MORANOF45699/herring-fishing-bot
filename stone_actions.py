@@ -133,7 +133,7 @@ def eat_if_due(sct=None):
     time.sleep(config.AFTER_EAT_DELAY)
 
 
-def deposit_to_trunk(sct):
+def _deposit_to_trunk(sct):
     """
     ฝากหินทั้งหมดเข้าท้ายรถ แล้วกลับไปฟาร์ม
     Returns: True ถ้าสำเร็จ
@@ -228,7 +228,7 @@ def deposit_to_trunk(sct):
     return True
 
 
-def discard_items(sct):
+def _discard_items(sct):
     """
     ทิ้งของทั้งหมด (โหมด discard) แล้วกลับไปฟาร์ม
     Flow: กด T เปิดกระเป๋า → คลิกขวาช่องของ → Delete → Max → O → ESC → G
@@ -307,3 +307,27 @@ def discard_items(sct):
     print("[ทิ้ง] ✓ ทิ้งสำเร็จ — กด G ฟาร์มต่อ")
     inp.press_g()
     return True
+
+
+def _with_focus_restore(fn, sct):
+    """
+    ดึงเกมขึ้นมาทำงาน แล้วคืนโฟกัสให้หน้าต่างที่ผู้ใช้ใช้อยู่ก่อนหน้า
+    (บอทเฝ้า counter ได้โดยไม่ต้องโฟกัสเกม แย่งโฟกัสเฉพาะตอนฝาก/ทิ้งเท่านั้น)
+    """
+    prev = inp.get_foreground() if config.RESTORE_FOCUS_AFTER else None
+    if prev and prev == inp._find_game_hwnd():
+        prev = None                   # เกมโฟกัสอยู่แล้ว ไม่ต้องคืนอะไร
+    try:
+        return fn(sct)
+    finally:
+        if prev:
+            print("[โฟกัส] คืนหน้าต่างเดิมให้ผู้ใช้")
+            inp.restore_foreground(prev)
+
+
+def deposit_to_trunk(sct):
+    return _with_focus_restore(_deposit_to_trunk, sct)
+
+
+def discard_items(sct):
+    return _with_focus_restore(_discard_items, sct)
