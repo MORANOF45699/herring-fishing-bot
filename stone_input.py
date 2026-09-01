@@ -189,6 +189,61 @@ def _find_game_hwnd():
     return found[0] if found else None
 
 
+class RECT(ctypes.Structure):
+    _fields_ = [("left", ctypes.c_long), ("top", ctypes.c_long),
+                ("right", ctypes.c_long), ("bottom", ctypes.c_long)]
+
+
+user32.GetWindowRect.argtypes = [ctypes.c_void_p, ctypes.POINTER(RECT)]
+user32.SetWindowPos.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
+                                ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                                ctypes.c_uint]
+
+SWP_NOSIZE = 0x0001
+SWP_NOZORDER = 0x0004
+SWP_NOACTIVATE = 0x0010
+PARK_POS = (-32000, -32000)
+
+_parked_at = [None]      # ตำแหน่งเดิมของหน้าต่างเกมตอนยังไม่ถูกจอด
+
+
+def is_parked():
+    return _parked_at[0] is not None
+
+
+def park_game():
+    """
+    ย้ายหน้าต่างเกมออกไปนอกจอ (ไม่ใช่ย่อ — ย่อแล้ว Windows หยุด render จับภาพไม่ได้)
+    เกมหายจากจอ แต่ยังวาดภาพอยู่ → Windows Graphics Capture ยังอ่าน HUD ได้
+    """
+    hwnd = _find_game_hwnd()
+    if not hwnd or is_parked():
+        return False
+    r = RECT()
+    user32.GetWindowRect(hwnd, ctypes.byref(r))
+    if r.left <= PARK_POS[0] + 1000:      # จอดอยู่แล้ว
+        return False
+    _parked_at[0] = (r.left, r.top)
+    user32.SetWindowPos(hwnd, None, PARK_POS[0], PARK_POS[1], 0, 0,
+                        SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)
+    print(f"[หน้าต่าง] จอดเกมไว้นอกจอ (ตำแหน่งเดิม {r.left},{r.top})")
+    return True
+
+
+def unpark_game():
+    """ดึงหน้าต่างเกมกลับเข้าจอที่ตำแหน่งเดิม (ต้องทำก่อนใช้เมาส์ลากของ)"""
+    hwnd = _find_game_hwnd()
+    if not hwnd or not is_parked():
+        return False
+    x, y = _parked_at[0]
+    user32.SetWindowPos(hwnd, None, x, y, 0, 0,
+                        SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)
+    _parked_at[0] = None
+    print(f"[หน้าต่าง] ดึงเกมกลับเข้าจอที่ {x},{y}")
+    time.sleep(0.6)
+    return True
+
+
 def get_foreground():
     """hwnd ของหน้าต่างที่กำลังโฟกัสอยู่ (ไว้จำไว้คืนทีหลัง)"""
     return user32.GetForegroundWindow()

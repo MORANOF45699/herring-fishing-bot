@@ -2,3 +2,4 @@ mss
 opencv-python
 numpy
 keyboard
+windows-capture

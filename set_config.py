@@ -16,7 +16,9 @@ defaults = {
     "ENABLE_EAT": True,
     "EAT_INTERVAL_MIN": 150.0,
     "DEPOSIT_MODE": "discard",
-    "CHECK_INTERVAL": 2.0
+    "CHECK_INTERVAL": 2.0,
+    "CAPTURE_MODE": "screen",
+    "PARK_GAME_OFFSCREEN": False
 }
 
 
@@ -63,6 +65,16 @@ def main():
         eat_enable_str = "เปิด (ON)" if config["ENABLE_EAT"] else "ปิด (OFF)"
         
         mode_str = "ทิ้งของ (discard)" if config["DEPOSIT_MODE"] == "discard" else "ฝากท้ายรถ (trunk)"
+
+        if config.get("CAPTURE_MODE", "screen") == "window":
+            cap_str = "จับหน้าต่างเกม (window) — เอาหน้าต่างอื่นทับได้"
+        else:
+            cap_str = "จับหน้าจอ (screen) — เกมต้องอยู่บนจอ"
+
+        if config.get("PARK_GAME_OFFSCREEN", False):
+            park_str = "เปิด (ON) — เกมหายจากจอระหว่างฟาร์ม"
+        else:
+            park_str = "ปิด (OFF)"
         
         print(f"  [1] ระบบกินน้ำ (ปุ่ม 1)       : {drink_enable_str}")
         print(f"  [2] เวลากินน้ำ (นาที)         : {config['DRINK_INTERVAL_MIN']:.1f} นาที")
@@ -70,12 +82,14 @@ def main():
         print(f"  [4] เวลากินข้าว (นาที)         : {config['EAT_INTERVAL_MIN']:.1f} นาที")
         print(f"  [5] โหมดเมื่อของเต็ม          : {mode_str}")
         print(f"  [6] ความถี่ในการสแกนภาพ (วิ)   : {config['CHECK_INTERVAL']:.1f} วินาที")
+        print(f"  [7] วิธีจับภาพ                : {cap_str}")
+        print(f"  [8] จอดเกมไว้นอกจอ            : {park_str}")
         print("-" * 60)
-        print("  [7] บันทึกและออก (Save & Exit)")
-        print("  [8] ยกเลิกและออก (Exit without saving)")
+        print("  [9] บันทึกและออก (Save & Exit)")
+        print("  [0] ยกเลิกและออก (Exit without saving)")
         print("=" * 60)
 
-        choice = input("กรุณาเลือกเมนู (1-8): ").strip()
+        choice = input("กรุณาเลือกเมนู (0-9): ").strip()
 
         if choice == "1":
             config["ENABLE_DRINK"] = not config["ENABLE_DRINK"]

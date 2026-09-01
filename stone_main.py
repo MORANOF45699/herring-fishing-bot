@@ -17,7 +17,7 @@ import sys
 import time
 
 import keyboard
-import mss
+import stone_capture
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -108,10 +108,14 @@ def main():
         if state["active"]:
             print("\n[บอท] ▶ เริ่มทำงาน — กด G เริ่มออโต้ฟาร์ม")
             time.sleep(0.3)
+            inp.focus_game()
             inp.press_g()
             state["last_change"] = time.time()
+            if config.PARK_GAME_OFFSCREEN and config.CAPTURE_MODE == "window":
+                inp.park_game()
         else:
             print("\n[บอท] ⏸ หยุดชั่วคราว")
+            inp.unpark_game()
 
     keyboard.add_hotkey(config.KEY_TOGGLE, toggle)
 
@@ -121,18 +125,20 @@ def main():
     counter_cy = cr["top"] + cr["height"] // 2
     covered = [False]
 
-    with mss.mss() as sct:
+    with stone_capture.open_capture() as sct:
         while True:
             if keyboard.is_pressed("esc"):
                 print("\n[บอท] ปิดโปรแกรม")
+                inp.unpark_game()
                 break
 
             if not state["active"]:
                 time.sleep(0.2)
                 continue
 
-            # เกมไม่ต้องโฟกัสก็อ่าน counter ได้ แต่ต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
-            if not inp.game_covers_point(counter_cx, counter_cy):
+            # โหมดจับหน้าจอ: เกมต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
+            # โหมดจับหน้าต่าง: ทับได้ ข้ามการเช็คนี้ไปเลย
+            if sct.mode == "screen" and not inp.game_covers_point(counter_cx, counter_cy):
                 if not covered[0]:
                     print("[บอท] ⏸ หน้าต่างอื่นบังเกม (หรือเกมถูกย่อ) — รอจนเห็น HUD")
                     covered[0] = True

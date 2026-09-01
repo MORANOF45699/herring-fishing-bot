@@ -26,7 +26,7 @@ sys.stderr = _log
 import tkinter as tk
 
 import keyboard
-import mss
+import stone_capture
 
 import config
 import stone_input as inp
@@ -69,10 +69,14 @@ def bot_loop():
         if state["active"]:
             set_status("▶ เริ่ม — กด G ออโต้ฟาร์ม", "#2ecc71")
             time.sleep(0.3)
+            inp.focus_game()
             inp.press_g()
             state["last_change"] = time.time()
+            if config.PARK_GAME_OFFSCREEN and config.CAPTURE_MODE == "window":
+                inp.park_game()
         else:
             set_status("⏸ พัก — กด F10 เริ่มต่อ", "#f39c12")
+            inp.unpark_game()
 
     keyboard.add_hotkey(config.KEY_TOGGLE, toggle)
 
@@ -82,14 +86,15 @@ def bot_loop():
     counter_cy = cr["top"] + cr["height"] // 2
     covered = [False]
 
-    with mss.mss() as sct:
+    with stone_capture.open_capture() as sct:
         while not stop_flag[0]:
             if not state["active"]:
                 time.sleep(0.2)
                 continue
 
-            # เกมไม่ต้องโฟกัสก็อ่าน counter ได้ แต่ต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
-            if not inp.game_covers_point(counter_cx, counter_cy):
+            # โหมดจับหน้าจอ: เกมต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
+            # โหมดจับหน้าต่าง: ทับได้ ข้ามการเช็คนี้ไปเลย
+            if sct.mode == "screen" and not inp.game_covers_point(counter_cx, counter_cy):
                 if not covered[0]:
                     set_status("⏸ เกมโดนบัง — รอจนเห็น HUD", "#f39c12")
                     covered[0] = True
@@ -179,6 +184,7 @@ def main():
     # ดับเบิลคลิกขวา = ปิดโปรแกรม
     def quit_app(_e=None):
         stop_flag[0] = True
+        inp.unpark_game()          # อย่าทิ้งเกมไว้นอกจอตอนปิดโปรแกรม
         root.destroy()
 
     label.bind("<Double-Button-3>", quit_app)

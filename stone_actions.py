@@ -311,15 +311,23 @@ def _discard_items(sct):
 
 def _with_focus_restore(fn, sct):
     """
-    ดึงเกมขึ้นมาทำงาน แล้วคืนโฟกัสให้หน้าต่างที่ผู้ใช้ใช้อยู่ก่อนหน้า
-    (บอทเฝ้า counter ได้โดยไม่ต้องโฟกัสเกม แย่งโฟกัสเฉพาะตอนฝาก/ทิ้งเท่านั้น)
+    ขั้นตอนฝาก/ทิ้งต้องใช้เมาส์ → เกมต้องอยู่บนจอและโฟกัส
+      1. ถ้าเกมจอดอยู่นอกจอ ดึงกลับเข้าจอก่อน
+      2. ทำงาน
+      3. ส่งเกมกลับไปจอดนอกจอ + คืนโฟกัสให้หน้าต่างที่ผู้ใช้ใช้อยู่
     """
     prev = inp.get_foreground() if config.RESTORE_FOCUS_AFTER else None
     if prev and prev == inp._find_game_hwnd():
         prev = None                   # เกมโฟกัสอยู่แล้ว ไม่ต้องคืนอะไร
+
+    was_parked = inp.is_parked()
+    if was_parked:
+        inp.unpark_game()             # cursor ไปพิกัดนอกจอไม่ได้ ต้องดึงกลับก่อน
     try:
         return fn(sct)
     finally:
+        if was_parked:
+            inp.park_game()
         if prev:
             print("[โฟกัส] คืนหน้าต่างเดิมให้ผู้ใช้")
             inp.restore_foreground(prev)

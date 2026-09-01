@@ -157,6 +157,19 @@ DRINK_LOADING_MIN_PX = max(20, int(80 * SCALE * SCALE))   # px สีส้ม�
 DRINK_RETRIES = 3           # กด 1 ซ้ำได้กี่ครั้งถ้าแถบไม่ขึ้น
 DRINK_CHECK_DELAY = 1.0     # รอแถบขึ้นหลังกด 1
 
+# ===== วิธีจับภาพ =====
+# "screen" = จับจากหน้าจอ (mss) — เกมต้องอยู่บนจอ ไม่โดนอะไรทับ (ค่าเดิม ปลอดภัยสุด)
+# "window" = จับจากหน้าต่างเกมตรง ๆ (Windows Graphics Capture)
+#            เอาหน้าต่างอื่นทับเกมได้ / จอดเกมไว้นอกจอได้
+#            *** ย่อ (minimize) ไม่ได้ — Windows หยุด render หน้าต่างที่ย่อ ***
+#            ต้องลง: pip install windows-capture
+CAPTURE_MODE = "screen"
+
+# จอดหน้าต่างเกมไว้นอกจอระหว่างฟาร์ม (ใช้ได้เฉพาะ CAPTURE_MODE = "window")
+# เกมหายจากจอ ใช้เดสก์ท็อปทำอย่างอื่นได้เต็มจอ
+# ตอนฝากของบอทจะดึงเกมกลับเข้าจอชั่วคราว (ต้องใช้เมาส์ลาก) แล้วส่งกลับออกไป
+PARK_GAME_OFFSCREEN = False
+
 # ===== ทำงานตอนเกมไม่ได้โฟกัส =====
 # อ่าน counter จากภาพหน้าจอได้โดยไม่ต้องโฟกัสเกม ขอแค่หน้าต่างเกม "ไม่โดนบัง"
 # ตอนของเต็มถึงจะดึงเกมขึ้นมาเพื่อกดปุ่ม/ลากของ แล้วคืนหน้าต่างเดิมให้
@@ -219,6 +232,12 @@ def _load_user_config():
             g["DEPOSIT_MODE"] = str(data["DEPOSIT_MODE"])
         if "CHECK_INTERVAL" in data:
             g["CHECK_INTERVAL"] = float(data["CHECK_INTERVAL"])
+
+        # วิธีจับภาพ + จอดเกมนอกจอ
+        if "CAPTURE_MODE" in data:
+            g["CAPTURE_MODE"] = str(data["CAPTURE_MODE"])
+        if "PARK_GAME_OFFSCREEN" in data:
+            g["PARK_GAME_OFFSCREEN"] = bool(data["PARK_GAME_OFFSCREEN"])
     except Exception as e:
         print(f"[config] ⚠ ไม่สามารถโหลด user_config.json ได้: {e}")
 
