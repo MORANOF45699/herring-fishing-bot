@@ -110,6 +110,10 @@ GARAGE_OPEN_RETRIES = 3      # กด L ซ้ำได้กี่ครั้�
 # "discard" = ทิ้งของ (กด T เปิดกระเป๋า → คลิกขวาช่องของ → Delete → Max → O)
 DEPOSIT_MODE = "discard"
 
+# โหมด trunk: ถ้าท้ายรถเต็ม (ฝากไม่ลง) ให้ทิ้งของแทน แล้วฟาร์มต่อ
+# ปิดตัวนี้ = ฝากไม่ได้ก็ยกเลิกรอบ รอผู้ใช้มาเคลียร์ท้ายรถเอง
+DISCARD_WHEN_TRUNK_FULL = True
+
 # --- ค่าเฉพาะโหมด discard ---
 # บริเวณช่องของในกระเป๋าส่วนตัว (หน้า INVENTORY กลางจอ หลังกด T)
 # อ้างอิง 1920x1080: left=610 top=270 w=700 h=510
@@ -238,6 +242,8 @@ def _load_user_config():
             g["CAPTURE_MODE"] = str(data["CAPTURE_MODE"])
         if "PARK_GAME_OFFSCREEN" in data:
             g["PARK_GAME_OFFSCREEN"] = bool(data["PARK_GAME_OFFSCREEN"])
+        if "DISCARD_WHEN_TRUNK_FULL" in data:
+            g["DISCARD_WHEN_TRUNK_FULL"] = bool(data["DISCARD_WHEN_TRUNK_FULL"])
     except Exception as e:
         print(f"[config] ⚠ ไม่สามารถโหลด user_config.json ได้: {e}")
 

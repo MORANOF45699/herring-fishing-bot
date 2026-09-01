@@ -133,6 +133,18 @@ def eat_if_due(sct=None):
     time.sleep(config.AFTER_EAT_DELAY)
 
 
+def _fallback_discard(sct, reason):
+    """
+    ฝากท้ายรถไม่ลง (ท้ายรถเต็ม) → ปิดหน้าต่างแล้วทิ้งของแทน จะได้ฟาร์มต่อได้
+    """
+    if not config.DISCARD_WHEN_TRUNK_FULL:
+        return False
+    print(f"[ฝาก] {reason} — ท้ายรถน่าจะเต็ม เปลี่ยนไปทิ้งของแทน")
+    inp.press_esc()
+    time.sleep(config.AFTER_CLOSE_DELAY)
+    return _discard_items(sct)
+
+
 def _deposit_to_trunk(sct):
     """
     ฝากหินทั้งหมดเข้าท้ายรถ แล้วกลับไปฟาร์ม
@@ -204,12 +216,15 @@ def _deposit_to_trunk(sct):
         # counter บน HUD ยังเห็นได้ทั้งที่หน้าต่างเปิดอยู่ → เช็คได้เลย
         if is_stone_empty(sct):
             break
+        if check_dialog:
+            # dialog เด้ง + กด O แล้ว แต่ของไม่ลด = เกมปฏิเสธ (ท้ายรถเต็ม)
+            # ไม่ใช่เรื่องช่องปลายทางผิด ลองช่องอื่นก็ได้ผลเหมือนเดิม
+            save_debug_screenshot(sct, "trunk_full")
+            return _fallback_discard(sct, "⚠ dialog เด้งแต่ของไม่ลด")
         print("[ฝาก] ⚠ counter ยังไม่ลด — ลองจุดปล่อยถัดไป")
     else:
         save_debug_screenshot(sct, "deposit_failed")
-        print("[ฝาก] ✗ ลากฝากไม่สำเร็จทุกจุดปล่อย — ปิดหน้าต่าง")
-        inp.press_esc()
-        return False
+        return _fallback_discard(sct, "✗ ลากฝากไม่สำเร็จทุกจุดปล่อย")
 
     # Step 4: ปิดหน้าต่าง
     print("[ฝาก] กด ESC ปิดหน้าต่าง")
@@ -219,8 +234,7 @@ def _deposit_to_trunk(sct):
     # ตรวจว่า counter กลับเป็น 0/100 จริง
     if not is_stone_empty(sct):
         save_debug_screenshot(sct, "deposit_not_empty")
-        print("[ฝาก] ⚠ counter ยังไม่เป็น 0 — ฝากอาจไม่สำเร็จ")
-        return False
+        return _fallback_discard(sct, "⚠ counter ยังไม่เป็น 0 หลังปิดหน้าต่าง")
 
     # Step 5: ฟาร์มต่อ
     print("[ฝาก] ✓ ฝากสำเร็จ — กด G ฟาร์มต่อ")
