@@ -218,6 +218,12 @@ def is_eating(sct):
     return is_drinking(sct)
 
 
+def is_dialog_open(sct):
+    """dialog ใส่จำนวน (Min/Max/O) เด้งอยู่ไหม (ต้องมี dialog_template.png จาก calibrate)"""
+    return _screen_has_template(sct, config.DIALOG_TEMPLATE,
+                                config.DIALOG_CHECK_REGION, config.DIALOG_MATCH_THRESHOLD)
+
+
 def is_bag_open(sct):
     """หน้ากระเป๋าส่วนตัว (กด T) เปิดอยู่ไหม (ใช้ template หัวข้อ INVENTORY เดิม)"""
     return _screen_has_template(sct, config.GARAGE_TEMPLATE,

@@ -52,6 +52,29 @@ COUNTER_REGION = _region(850 / 1920, 970 / 1080, 175 / 1920, 30 / 1080)
 # ===== พิกัดคลิก (สัดส่วนอิง 1920x1080) =====
 BTN_OPEN_TRUNK = _pt(1212 / 1920, 752 / 1080)   # ปุ่ม "เปิดหลังรถ"
 DROP_POINT = _pt(1440 / 1920, 520 / 1080)        # จุดปล่อยของ ฝั่ง SECONDARY
+# ขนาดช่องไอเทม (อ้างอิง 1920x1080) — ใช้คำนวณจุดปล่อยสำรอง
+SLOT_W = 117 / 1920
+SLOT_H = 117 / 1080
+DEPOSIT_RETRIES = 4     # ลากฝากไม่ติด ลองจุดปล่อยอื่นได้กี่ครั้ง (ในหน้าต่างเดิม)
+
+
+def drop_candidates():
+    """
+    จุดปล่อยของ เรียงตามลำดับที่จะลอง
+    ครั้งแรกช่องว่าง ลากลงได้ แต่รอบต่อไปช่องนั้นมีของแล้ว → ต้องมีช่องสำรอง
+    """
+    dx = int(SLOT_W * SCREEN_W)
+    dy = int(SLOT_H * SCREEN_H)
+    x, y = DROP_POINT
+    return [
+        (x, y),
+        (x + dx, y),
+        (x + 2 * dx, y),
+        (x, y + dy),
+        (x + dx, y + dy),
+        (x + 2 * dx, y + dy),
+    ]
+
 BTN_MAX = _pt(1102 / 1920, 559 / 1080)           # ปุ่ม Max ใน dialog
 BTN_CONFIRM = _pt(920 / 1920, 618 / 1080)        # ปุ่ม O (ยืนยัน)
 
@@ -110,6 +133,13 @@ CLICK_DELAY = 0.8           # ดีเลย์ระหว่างคลิ�
 DRAG_DURATION = 0.8         # เวลาลากไอเทม
 AFTER_DEPOSIT_DELAY = 2.0   # รอหลังยืนยันฝากของ ก่อนกด ESC
 AFTER_CLOSE_DELAY = 1.5     # รอหลังกด ESC ก่อนเช็ค counter / กด G
+
+# ===== ตรวจว่า dialog "นำเข้าท้ายรถ" (Min/Max/O) เด้งจริงหลังลากไอเทม =====
+# ไม่มีไฟล์ template → ข้ามการเช็ค (ทำงานได้เหมือนเดิม)
+# อ้างอิง 1920x1080: left=780 top=430 w=380 h=220
+DIALOG_CHECK_REGION = _region(780 / 1920, 430 / 1080, 380 / 1920, 220 / 1080)
+DIALOG_TEMPLATE = os.path.join(os.path.dirname(__file__), "dialog_template.png")
+DIALOG_MATCH_THRESHOLD = 0.60
 
 # ===== กินน้ำ (กด 1) และ กินข้าว (กด 2) =====
 ENABLE_DRINK = True

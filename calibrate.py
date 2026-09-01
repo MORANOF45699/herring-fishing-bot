@@ -12,6 +12,7 @@ calibrate.py - บันทึกพิกัดปุ่ม + template ช่�
      [6] เปิดแผนที่/เมนู pause (Esc) ค้างไว้ แล้วกด 6 → map_template.png
      [7] เปิดหน้าท้ายรถ (กด L) ค้างไว้ แล้วกด 7 → garage_template.png
      [8] ตอนไอเทมเต็มความจุ (เช่น 40/40, 100/100) กด 8 → full_template.png
+     [9] ลากของจนขึ้น dialog Min/Max/O ค้างไว้ แล้วกด 9 → dialog_template.png
      [0] บันทึก calibration.json แล้วออก
 """
 
@@ -78,6 +79,7 @@ def main():
         keyboard.add_hotkey("6", lambda: save_region_template("MAP_CHECK_REGION", "map_template.png", "แผนที่/เมนู"))
         keyboard.add_hotkey("7", lambda: save_region_template("GARAGE_CHECK_REGION", "garage_template.png", "หน้าท้ายรถ"))
         keyboard.add_hotkey("8", lambda: save_region_template("COUNTER_REGION", "full_template.png", "counter ตอนเต็ม"))
+        keyboard.add_hotkey("9", lambda: save_region_template("DIALOG_CHECK_REGION", "dialog_template.png", "dialog ใส่จำนวน"))
 
         print("รอการกดปุ่ม... (กด 0 เพื่อบันทึกและออก)")
         keyboard.wait("0")

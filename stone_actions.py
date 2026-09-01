@@ -16,7 +16,8 @@ import config
 import stone_input as inp
 from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
                             is_bag_open, is_drinking, is_eating, is_map_open,
-                            template_available, save_debug_screenshot)
+                            is_dialog_open, template_available,
+                            save_debug_screenshot)
 
 
 def _recover(sct):
@@ -162,26 +163,47 @@ def deposit_to_trunk(sct):
         inp.press_esc()
         return False
 
-    # Step 2: หา slot Stone (เลื่อนขึ้นบนสุด แล้วไล่เลื่อนลงถ้ายังไม่เจอ)
-    slot = _find_slot_with_scroll(sct, config.INVENTORY_REGION, "ฝาก")
+    # Step 2-3: ลากไอเทม → dialog → Max → O
+    # รอบแรกช่องปลายทางว่าง ลากลงได้ แต่รอบต่อไปช่องนั้นมีของแล้ว ลากไม่ลง
+    # → วนลองจุดปล่อยสำรองในหน้าต่างเดิม ไม่ต้องปิดเปิดท้ายรถใหม่
+    check_dialog = template_available(config.DIALOG_TEMPLATE)
+    if not check_dialog:
+        print("[ฝาก] (ข้ามการยืนยัน dialog — ยังไม่มี dialog_template.png)")
 
-    if slot is None:
-        save_debug_screenshot(sct, "no_stone_slot")
-        print("[ฝาก] ✗ หาช่อง Stone ไม่เจอ (เลื่อนขึ้นแล้วก็ไม่เจอ) — ปิดหน้าต่าง")
+    candidates = config.drop_candidates()
+    for attempt in range(1, config.DEPOSIT_RETRIES + 1):
+        slot = _find_slot_with_scroll(sct, config.INVENTORY_REGION, "ฝาก")
+        if slot is None:
+            save_debug_screenshot(sct, "no_stone_slot")
+            print("[ฝาก] ✗ หาช่องไอเทมไม่เจอ (เลื่อนหาแล้วก็ไม่เจอ) — ปิดหน้าต่าง")
+            inp.press_esc()
+            return False
+
+        drop = candidates[(attempt - 1) % len(candidates)]
+        print(f"[ฝาก] ลากไอเทม {slot} → {drop} (ครั้งที่ {attempt}/{config.DEPOSIT_RETRIES})")
+        inp.drag(*slot, *drop, duration=config.DRAG_DURATION)
+        time.sleep(config.DIALOG_OPEN_DELAY)
+
+        if check_dialog and not is_dialog_open(sct):
+            print("[ฝาก] ⚠ dialog ไม่เด้ง (ช่องปลายทางน่าจะมีของอยู่) — ลองจุดปล่อยถัดไป")
+            continue
+
+        print("[ฝาก] คลิก Max...")
+        inp.click(*config.BTN_MAX)
+        time.sleep(config.CLICK_DELAY)
+        print("[ฝาก] คลิกยืนยัน O...")
+        inp.click(*config.BTN_CONFIRM)
+        time.sleep(config.AFTER_DEPOSIT_DELAY)
+
+        # counter บน HUD ยังเห็นได้ทั้งที่หน้าต่างเปิดอยู่ → เช็คได้เลย
+        if is_stone_empty(sct):
+            break
+        print("[ฝาก] ⚠ counter ยังไม่ลด — ลองจุดปล่อยถัดไป")
+    else:
+        save_debug_screenshot(sct, "deposit_failed")
+        print("[ฝาก] ✗ ลากฝากไม่สำเร็จทุกจุดปล่อย — ปิดหน้าต่าง")
         inp.press_esc()
         return False
-
-    print(f"[ฝาก] ลากไอเทม {slot} → {config.DROP_POINT}")
-    inp.drag(*slot, *config.DROP_POINT, duration=config.DRAG_DURATION)
-    time.sleep(config.DIALOG_OPEN_DELAY)
-
-    # Step 3: Max → ยืนยัน O
-    print("[ฝาก] คลิก Max...")
-    inp.click(*config.BTN_MAX)
-    time.sleep(config.CLICK_DELAY)
-    print("[ฝาก] คลิกยืนยัน O...")
-    inp.click(*config.BTN_CONFIRM)
-    time.sleep(config.AFTER_DEPOSIT_DELAY)
 
     # Step 4: ปิดหน้าต่าง
     print("[ฝาก] กด ESC ปิดหน้าต่าง")
