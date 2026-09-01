@@ -37,6 +37,20 @@ from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
 
 MAX_DEPOSIT_FAILS = 2
 
+
+# ===== กันรันซ้ำ: เปิดสองตัวพร้อมกัน ปุ่ม L/T จะตีกัน (ตัวนึงเปิด อีกตัวปิด) =====
+_MUTEX_NAME = "HerringItemFarmBot_SingleInstance"
+_mutex_handle = None
+
+
+def acquire_single_instance():
+    """คืน True ถ้าเป็นตัวแรก, False ถ้ามีบอทตัวอื่นรันอยู่แล้ว"""
+    global _mutex_handle
+    import ctypes
+    k32 = ctypes.windll.kernel32
+    _mutex_handle = k32.CreateMutexW(None, False, _MUTEX_NAME)
+    return k32.GetLastError() != 183      # ERROR_ALREADY_EXISTS
+
 status = {"text": "พร้อม — กด F10 เริ่ม (F11 Toggle HUD)", "color": "#cccccc"}
 stop_flag = [False]
 
@@ -120,6 +134,10 @@ def bot_loop():
 
 
 def main():
+    if not acquire_single_instance():
+        print("[v2] มีบอทตัวอื่นรันอยู่แล้ว — ปิดตัวนี้ทิ้ง (กันปุ่มตีกัน)")
+        return
+
     root = tk.Tk()
     root.overrideredirect(True)          # ไม่มีกรอบหน้าต่าง
     root.attributes("-topmost", True)    # ลอยทับเกม (borderless)

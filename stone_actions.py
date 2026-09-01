@@ -22,6 +22,9 @@ from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
 
 def _recover(sct):
     """กู้สถานะก่อนลองใหม่: แผนที่/เมนูค้าง → ESC, โฟกัสหลุด → ดึงเกมกลับ"""
+    if not inp.is_game_focused():
+        inp.focus_game()
+        return
     if is_map_open(sct):
         print("[กู้] เจอแผนที่/เมนูค้าง → กด ESC ปิด")
         inp.press_esc()
@@ -135,7 +138,10 @@ def deposit_to_trunk(sct):
     ฝากหินทั้งหมดเข้าท้ายรถ แล้วกลับไปฟาร์ม
     Returns: True ถ้าสำเร็จ
     """
-    inp.focus_game()
+    if not inp.focus_game():
+        save_debug_screenshot(sct, "no_focus")
+        print("[ฝาก] ✗ เกมไม่ได้อยู่หน้าจอ — ข้ามรอบนี้ (ไม่กดปุ่มมั่ว)")
+        return False
 
     # Step 1: กด L เปิดท้ายรถ + ยืนยันว่าเปิดจริง (กด L ซ้ำถ้ายังไม่ขึ้น)
     check_garage = template_available(config.GARAGE_TEMPLATE)
@@ -228,7 +234,10 @@ def discard_items(sct):
     Flow: กด T เปิดกระเป๋า → คลิกขวาช่องของ → Delete → Max → O → ESC → G
     Returns: True ถ้าสำเร็จ
     """
-    inp.focus_game()
+    if not inp.focus_game():
+        save_debug_screenshot(sct, "no_focus")
+        print("[ทิ้ง] ✗ เกมไม่ได้อยู่หน้าจอ — ข้ามรอบนี้ (ไม่กดปุ่มมั่ว)")
+        return False
 
     # Step 1: กด T เปิดกระเป๋า + ยืนยันว่าเปิดจริง (กด T ซ้ำถ้ายังไม่ขึ้น)
     check_bag = template_available(config.GARAGE_TEMPLATE)

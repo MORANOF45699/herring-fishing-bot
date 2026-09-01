@@ -173,22 +173,38 @@ def _find_game_hwnd():
     return found[0] if found else None
 
 
-def focus_game():
-    """ดึงหน้าต่างเกมกลับ foreground (กันเมาส์/โฟกัสหลุดไปหน้าต่างอื่น)"""
+def is_game_focused():
+    """เกมเป็นหน้าต่างที่รับ input อยู่ไหม"""
+    hwnd = _find_game_hwnd()
+    return bool(hwnd) and user32.GetForegroundWindow() == hwnd
+
+
+def focus_game(retries=3):
+    """
+    ดึงหน้าต่างเกมกลับ foreground (กันเมาส์/โฟกัสหลุดไปหน้าต่างอื่น)
+    เจอ Start menu / เมนู Windows แย่งโฟกัส → กด ESC ปิดก่อน
+    คืน False ถ้าดึงกลับไม่ได้ — ผู้เรียกต้องไม่กดปุ่มต่อ ไม่งั้นปุ่มจะรั่วไปโดนเดสก์ท็อป
+    """
     hwnd = _find_game_hwnd()
     if not hwnd:
         return False
-    if user32.GetForegroundWindow() == hwnd:
-        return True
-    print("[input] โฟกัสหลุดจากเกม → ดึงหน้าต่างเกมกลับมา")
-    if user32.IsIconic(hwnd):
-        user32.ShowWindow(hwnd, 9)          # SW_RESTORE
-    # กด ALT หลอกก่อน ปลดข้อจำกัด SetForegroundWindow
-    _key_event(KEY_ALT, KEYEVENTF_SCANCODE)
-    user32.SetForegroundWindow(hwnd)
-    _key_event(KEY_ALT, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP)
-    time.sleep(0.4)
-    return user32.GetForegroundWindow() == hwnd
+
+    for _ in range(retries):
+        if user32.GetForegroundWindow() == hwnd:
+            return True
+        print("[input] โฟกัสหลุดจากเกม → ดึงหน้าต่างเกมกลับมา")
+        # ปิด Start menu / เมนูคลิกขวาของ Windows ที่ค้างทับเกมอยู่
+        press_key(KEY_ESC)
+        time.sleep(0.25)
+        if user32.IsIconic(hwnd):
+            user32.ShowWindow(hwnd, 9)      # SW_RESTORE
+        user32.SwitchToThisWindow(hwnd, True)
+        time.sleep(0.4)
+
+    ok = user32.GetForegroundWindow() == hwnd
+    if not ok:
+        print("[input] ⚠ ดึงโฟกัสเกมกลับไม่ได้ — งดกดปุ่มรอบนี้")
+    return ok
 
 
 def move_to(x, y):

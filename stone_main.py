@@ -30,6 +30,20 @@ from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
 MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่ครั้งถึงหยุดบอท
 
 
+# ===== กันรันซ้ำ: เปิดสองตัวพร้อมกัน ปุ่ม L/T จะตีกัน (ตัวนึงเปิด อีกตัวปิด) =====
+_MUTEX_NAME = "HerringItemFarmBot_SingleInstance"
+_mutex_handle = None
+
+
+def acquire_single_instance():
+    """คืน True ถ้าเป็นตัวแรก, False ถ้ามีบอทตัวอื่นรันอยู่แล้ว"""
+    global _mutex_handle
+    import ctypes
+    k32 = ctypes.windll.kernel32
+    _mutex_handle = k32.CreateMutexW(None, False, _MUTEX_NAME)
+    return k32.GetLastError() != 183      # ERROR_ALREADY_EXISTS
+
+
 def print_banner():
     print("=" * 55)
     print("    🤖  FiveM Item Farming Bot (บอทเก็บไอเทม) 🤖    ")
@@ -51,6 +65,11 @@ def print_banner():
 
 
 def main():
+    if not acquire_single_instance():
+        print("มีบอทตัวอื่นรันอยู่แล้ว — ปิดตัวนั้นก่อน (กันปุ่มตีกัน)")
+        input("กด Enter เพื่อปิด...")
+        return
+
     try:
         print("\n--- ตั้งค่าระบบ กินน้ำ (ปุ่ม 1) / กินข้าว (ปุ่ม 2) ---")
         
