@@ -16,10 +16,13 @@ import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-os.chdir(HERE)
+ROOT = os.path.dirname(HERE)
+os.chdir(ROOT)
 
 # pythonw ไม่มี stdout → เขียน log ลงไฟล์แทน (print เดิมทุกไฟล์ไปลงนี่)
-_log = open(os.path.join(HERE, "bot_log.txt"), "a", encoding="utf-8", buffering=1)
+_LOG_DIR = os.path.join(ROOT, "logs")
+os.makedirs(_LOG_DIR, exist_ok=True)
+_log = open(os.path.join(_LOG_DIR, "bot_log.txt"), "a", encoding="utf-8", buffering=1)
 sys.stdout = _log
 sys.stderr = _log
 

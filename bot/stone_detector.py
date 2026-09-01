@@ -19,7 +19,7 @@ import numpy as np
 
 import config
 
-DEBUG_DIR = os.path.join(os.path.dirname(__file__), "debug_images")
+DEBUG_DIR = config.DEBUG_DIR
 
 
 def _grab(sct, region):
@@ -71,7 +71,7 @@ def count_counter_glyphs(sct, debug=False):
     return glyphs, mask
 
 
-FULL_TEMPLATE = os.path.join(os.path.dirname(__file__), "full_template.png")
+FULL_TEMPLATE = config.FULL_TEMPLATE
 _full_template_mask = None
 _full_min_width = None
 

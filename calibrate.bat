@@ -21,7 +21,7 @@ echo    (switch to the game, press keys 1-8, press 0 to finish)
 echo =======================================================
 echo.
 
-%PY% calibrate.py
+%PY% bot\calibrate.py
 
 echo.
 pause

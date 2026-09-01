@@ -4,17 +4,16 @@ __pycache__/
 *.pyo
 
 # ไฟล์เฉพาะเครื่อง (แต่ละคน calibrate เอง)
-calibration.json
+templates/calibration.json
 
-# ภาพ debug ที่บอทบันทึกตอนรัน
+# ภาพ debug ที่บอทบันทึกตอนพลาด
 debug_images/
-counter_raw.png
-counter_mask.png
-full_template_debug.png
+templates/counter_raw.png
+templates/counter_mask.png
 
-# ไฟล์ชั่วคราว
+# log
+logs/
 *.log
-bot_log.txt
 
 # ตัวติดตั้ง Python (ไม่ใช่ซอร์ส)
 *.msix

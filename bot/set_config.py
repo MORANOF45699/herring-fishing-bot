@@ -7,7 +7,8 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stdin.reconfigure(encoding='utf-8')
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), "user_config.json")
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "user_config.json")
 
 # ค่าเริ่มต้นเริ่มต้น
 defaults = {
@@ -18,7 +19,8 @@ defaults = {
     "DEPOSIT_MODE": "discard",
     "CHECK_INTERVAL": 2.0,
     "CAPTURE_MODE": "screen",
-    "PARK_GAME_OFFSCREEN": False
+    "PARK_GAME_OFFSCREEN": False,
+    "TRUNK_FULL_MEMORY_MIN": 10.0
 }
 
 
@@ -84,12 +86,13 @@ def main():
         print(f"  [6] ความถี่ในการสแกนภาพ (วิ)   : {config['CHECK_INTERVAL']:.1f} วินาที")
         print(f"  [7] วิธีจับภาพ                : {cap_str}")
         print(f"  [8] จอดเกมไว้นอกจอ            : {park_str}")
+        print(f"  [t] จำว่าท้ายรถเต็มนานแค่ไหน   : {config.get('TRUNK_FULL_MEMORY_MIN', 10.0):.1f} นาที")
         print("-" * 60)
         print("  [9] บันทึกและออก (Save & Exit)")
         print("  [0] ยกเลิกและออก (Exit without saving)")
         print("=" * 60)
 
-        choice = input("กรุณาเลือกเมนู (0-9): ").strip()
+        choice = input("กรุณาเลือกเมนู (0-9 หรือ t): ").strip().lower()
 
         if choice == "1":
             config["ENABLE_DRINK"] = not config["ENABLE_DRINK"]
@@ -136,6 +139,13 @@ def main():
                 print()
                 print("  ต้องตั้ง [7] เป็น window ก่อน ไม่งั้นจอดแล้วอ่าน counter ไม่ได้")
                 input("  กด Enter เพื่อไปต่อ...")
+        elif choice == "t":
+            try:
+                val = input(f"จำว่าท้ายรถเต็มกี่นาที [เดิม {config.get('TRUNK_FULL_MEMORY_MIN', 10.0):.1f}]: ").strip()
+                if val:
+                    config["TRUNK_FULL_MEMORY_MIN"] = float(val)
+            except ValueError:
+                input("ค่าไม่ถูกต้อง! กรุณาใส่ตัวเลขเท่านั้น (กด Enter เพื่อลองใหม่)")
         elif choice == "9":
             if save_config(config):
                 print()

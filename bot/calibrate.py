@@ -30,7 +30,9 @@ import numpy as np
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+TEMPLATE_DIR = os.path.join(ROOT, "templates")
 TEMPLATE_SIZE = 70  # ขนาด template ที่ crop รอบ cursor
 
 
@@ -49,7 +51,7 @@ def save_template(sct):
     region = {"left": x - half, "top": y - half, "width": TEMPLATE_SIZE, "height": TEMPLATE_SIZE}
     img = np.array(sct.grab(region))
     bgr = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-    path = os.path.join(HERE, "stone_template.png")
+    path = os.path.join(TEMPLATE_DIR, "stone_template.png")
     cv2.imwrite(path, bgr)
     print(f"[1] ✓ บันทึก template ช่อง Stone ที่ ({x},{y}) → {path}")
 
@@ -87,7 +89,7 @@ def main():
             bgr = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
             if crop_text:
                 bgr = _crop_to_text(bgr)
-            path = os.path.join(HERE, filename)
+            path = os.path.join(TEMPLATE_DIR, filename)
             cv2.imwrite(path, bgr)
             print(f"✓ บันทึก template {label} {bgr.shape[1]}x{bgr.shape[0]} → {path}")
 
@@ -104,7 +106,7 @@ def main():
         print("รอการกดปุ่ม... (กด 0 เพื่อบันทึกและออก)")
         keyboard.wait("0")
 
-    path = os.path.join(HERE, "calibration.json")
+    path = os.path.join(TEMPLATE_DIR, "calibration.json")
     existing = {}
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:

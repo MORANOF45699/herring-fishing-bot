@@ -7,4 +7,4 @@ REM Find Python
 py --version >nul 2>&1
 if %errorlevel%==0 (set PY=py) else (set PY=python)
 
-%PY% set_config.py
+%PY% bot\set_config.py

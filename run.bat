@@ -15,7 +15,7 @@ REM Find Python
 py --version >nul 2>&1
 if %errorlevel%==0 (set PY=py) else (set PY=python)
 
-%PY% stone_main.py
+%PY% bot\stone_main.py
 
 echo.
 echo (Bot stopped) Press any key to close

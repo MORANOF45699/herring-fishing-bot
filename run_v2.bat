@@ -14,5 +14,5 @@ REM Find pythonw (no console window)
 where pyw >nul 2>&1
 if %errorlevel%==0 (set PYW=pyw) else (set PYW=pythonw)
 
-start "" %PYW% stone_main_v2.py
+start "" %PYW% bot\stone_main_v2.py
 exit

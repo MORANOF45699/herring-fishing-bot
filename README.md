@@ -47,3 +47,22 @@ python stone_main.py   # รันบอท (รัน as Administrator)
 | `stone_input.py` | ส่งปุ่ม/เมาส์ (DirectInput) |
 | `config.py` | ค่าพิกัด/ดีเลย์/เกณฑ์ |
 | `calibrate.py` | จับพิกัด + template ของจอตัวเอง |
+
+## โครงสร้างโฟลเดอร์
+
+```
+Herring/
+  run.bat            เริ่มบอท (มีหน้าคอนโซล)
+  run_v2.bat         เริ่มบอท (ไม่มีคอนโซล + HUD เล็กบนจอ)
+  stop_bot.bat       ปิดบอททุกตัว
+  set_config.bat     เมนูตั้งค่า
+  calibrate.bat      จับพิกัด/ถ่าย template
+  setup.bat          ติดตั้ง library ครั้งแรก
+  user_config.json   ค่าที่ปรับบ่อย — แก้ระหว่างบอทรันได้ มีผลทันที
+
+  bot/               โค้ดทั้งหมด
+  templates/         ภาพ template + calibration.json (เฉพาะเครื่อง)
+  logs/              bot_log.txt
+  debug_images/      ภาพตอนบอทพลาด (เก็บ 5 ไฟล์ล่าสุดต่อปัญหา)
+  tools/             สคริปต์ทดสอบ
+```

@@ -18,6 +18,16 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*mss.ms
 
 import mss
 
+# ===== ที่อยู่ไฟล์ =====
+# โค้ดอยู่ใน bot/ ส่วนไฟล์ข้อมูลอยู่โฟลเดอร์แม่
+BOT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(BOT_DIR)
+TEMPLATE_DIR = os.path.join(ROOT, "templates")
+LOG_DIR = os.path.join(ROOT, "logs")
+DEBUG_DIR = os.path.join(ROOT, "debug_images")
+USER_CONFIG_PATH = os.path.join(ROOT, "user_config.json")
+CALIBRATION_PATH = os.path.join(TEMPLATE_DIR, "calibration.json")
+
 # ===== ตรวจขนาดจอจริง (primary monitor) =====
 with mss.mss() as _sct:
     _mon = _sct.monitors[1]
@@ -81,12 +91,12 @@ BTN_CONFIRM = _pt(920 / 1920, 618 / 1080)        # ปุ่ม O (ยืนย�
 # ===== บริเวณค้นหาช่อง Stone ใน INVENTORY (ฝั่งซ้าย) =====
 # อ้างอิง 1920x1080: left=140 top=270 w=730 h=520
 INVENTORY_REGION = _region(140 / 1920, 270 / 1080, 730 / 1920, 520 / 1080)
-STONE_TEMPLATE = os.path.join(os.path.dirname(__file__), "stone_template.png")
+STONE_TEMPLATE = os.path.join(TEMPLATE_DIR, "stone_template.png")
 TEMPLATE_MATCH_THRESHOLD = 0.70
 INV_SCROLL_RETRIES = 4       # หาช่อง Stone ไม่เจอ → เลื่อนขึ้นแล้วหาใหม่ได้กี่รอบ
 
 # ===== เกณฑ์ตัดสินว่าเต็ม 100/100 (ต้องผ่านทั้งสองข้อ) =====
-FULL_TEMPLATE = os.path.join(os.path.dirname(__file__), "full_template.png")
+FULL_TEMPLATE = os.path.join(TEMPLATE_DIR, "full_template.png")
 FULL_MATCH_THRESHOLD = 0.80              # template matching mask "100/100"
 FULL_TEXT_MIN_WIDTH = int(59 * SCALE)    # ความกว้างข้อความ px (สเกลตามจอ)
 
@@ -94,14 +104,14 @@ FULL_TEXT_MIN_WIDTH = int(59 * SCALE)    # ความกว้างข้อ�
 # region ครอบโลโก้ "FiveM" + แถบแท็บ ด้านบนซ้าย (โผล่เฉพาะตอนเมนูเปิด)
 # อ้างอิง 1920x1080: left=300 top=115 w=380 h=120
 MAP_CHECK_REGION = _region(300 / 1920, 115 / 1080, 380 / 1920, 120 / 1080)
-MAP_TEMPLATE = os.path.join(os.path.dirname(__file__), "map_template.png")
+MAP_TEMPLATE = os.path.join(TEMPLATE_DIR, "map_template.png")
 MAP_MATCH_THRESHOLD = 0.65
 
 # ===== ตรวจว่าหน้าท้ายรถ (INVENTORY/SECONDARY) เปิดจริงหลังกด L =====
 # region ครอบหัวข้อ "INVENTORY" ด้านบนซ้ายของหน้าต่าง
 # อ้างอิง 1920x1080: left=370 top=180 w=250 h=90
 GARAGE_CHECK_REGION = _region(370 / 1920, 180 / 1080, 250 / 1920, 90 / 1080)
-GARAGE_TEMPLATE = os.path.join(os.path.dirname(__file__), "garage_template.png")
+GARAGE_TEMPLATE = os.path.join(TEMPLATE_DIR, "garage_template.png")
 GARAGE_MATCH_THRESHOLD = 0.70
 GARAGE_OPEN_RETRIES = 3      # กด L ซ้ำได้กี่ครั้งถ้าเมนูยังไม่เปิด
 
@@ -155,7 +165,7 @@ AFTER_CLOSE_DELAY = 1.5     # รอหลังกด ESC ก่อนเช็
 # ไม่มีไฟล์ template → ข้ามการเช็ค (ทำงานได้เหมือนเดิม)
 # อ้างอิง 1920x1080: left=780 top=430 w=380 h=220
 DIALOG_CHECK_REGION = _region(780 / 1920, 430 / 1080, 380 / 1920, 220 / 1080)
-DIALOG_TEMPLATE = os.path.join(os.path.dirname(__file__), "dialog_template.png")
+DIALOG_TEMPLATE = os.path.join(TEMPLATE_DIR, "dialog_template.png")
 DIALOG_MATCH_THRESHOLD = 0.60
 
 # ===== กินน้ำ (กด 1) และ กินข้าว (กด 2) =====
@@ -206,7 +216,7 @@ KEY_TOGGLE_HUD = "f11"      # เปิด/ปิด HUD (toggle)
 
 def _load_calibration():
     """โหลด calibration.json ถ้ามี มา override ค่าที่คำนวณจากสัดส่วน"""
-    path = os.path.join(os.path.dirname(__file__), "calibration.json")
+    path = CALIBRATION_PATH
     if not os.path.exists(path):
         return
     with open(path, "r", encoding="utf-8") as f:
@@ -225,7 +235,7 @@ _load_calibration()
 
 def _load_user_config():
     """โหลด user_config.json เพื่อ override ค่ากินข้าว/น้ำ และโหมดฝากของ"""
-    path = os.path.join(os.path.dirname(__file__), "user_config.json")
+    path = USER_CONFIG_PATH
     if not os.path.exists(path):
         return
     try:
@@ -283,9 +293,8 @@ def reload_user_config(verbose=True):
     mtime อาจเท่าเดิม แล้วจะพลาดการเปลี่ยนแปลง
     Returns: True ถ้าเพิ่งโหลดใหม่
     """
-    path = os.path.join(os.path.dirname(__file__), "user_config.json")
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(USER_CONFIG_PATH, "r", encoding="utf-8") as f:
             text = f.read()
     except OSError:
         return False
