@@ -218,6 +218,38 @@ def is_eating(sct):
     return is_drinking(sct)
 
 
+def trunk_full_score(sct):
+    """
+    อ่านน้ำหนักท้ายรถ "ใช้แล้ว/ความจุ" แล้วเทียบว่าเลขสองฝั่งเหมือนกันไหม
+    เหมือนกัน = ท้ายรถเต็ม  Returns: คะแนน 0-1 (None ถ้าอ่านข้อความไม่ได้)
+    """
+    bgr = _grab(sct, config.TRUNK_WEIGHT_REGION)
+    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+    mask = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)[1]
+
+    cols = np.where(mask.any(axis=0))[0]
+    rows = np.where(mask.any(axis=1))[0]
+    if len(cols) < 10 or len(rows) < 5:
+        return None                      # ไม่เจอข้อความ (หน้าต่างยังไม่เปิด?)
+
+    mask = mask[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+    w = mask.shape[1]
+    half = w // 2
+    if half < 5:
+        return None
+    left, right = mask[:, :half], mask[:, w - half:]
+    return float(cv2.minMaxLoc(cv2.matchTemplate(left, right,
+                                                 cv2.TM_CCOEFF_NORMED))[1])
+
+
+def is_trunk_full(sct):
+    """ท้ายรถเต็มหรือยัง (อ่านจากตัวเลข KG มุมขวาล่าง)"""
+    score = trunk_full_score(sct)
+    if score is None:
+        return False                     # อ่านไม่ได้ → อย่าเพิ่งสรุปว่าเต็ม
+    return score >= config.TRUNK_FULL_THRESHOLD
+
+
 def is_dialog_open(sct):
     """dialog ใส่จำนวน (Min/Max/O) เด้งอยู่ไหม (ต้องมี dialog_template.png จาก calibrate)"""
     return _screen_has_template(sct, config.DIALOG_TEMPLATE,

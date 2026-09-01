@@ -16,8 +16,8 @@ import config
 import stone_input as inp
 from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
                             is_bag_open, is_drinking, is_eating, is_map_open,
-                            is_dialog_open, template_available,
-                            save_debug_screenshot)
+                            is_dialog_open, is_trunk_full, trunk_full_score,
+                            template_available, save_debug_screenshot)
 
 
 def _recover(sct):
@@ -180,6 +180,15 @@ def _deposit_to_trunk(sct):
         print("[ฝาก] ✗ เปิดท้ายรถไม่ได้ — ยกเลิกรอบนี้")
         inp.press_esc()
         return False
+
+    # Step 1.5: อ่านน้ำหนักท้ายรถก่อนเลย — เต็มแล้วไม่ต้องเสียเวลาลาก
+    score = trunk_full_score(sct)
+    if score is not None:
+        print(f"[ฝาก] น้ำหนักท้ายรถ: ความเหมือนเลขสองฝั่ง={score:.2f} "
+              f"(เต็มถ้า >= {config.TRUNK_FULL_THRESHOLD})")
+    if is_trunk_full(sct):
+        save_debug_screenshot(sct, "trunk_full")
+        return _fallback_discard(sct, "✗ ท้ายรถเต็มแล้ว (อ่านจากตัวเลข KG)")
 
     # Step 2-3: ลากไอเทม → dialog → Max → O
     # รอบแรกช่องปลายทางว่าง ลากลงได้ แต่รอบต่อไปช่องนั้นมีของแล้ว ลากไม่ลง
