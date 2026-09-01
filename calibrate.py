@@ -8,7 +8,6 @@ calibrate.py - บันทึกพิกัดปุ่ม + template ช่�
      [2] ชี้จุดว่างฝั่ง SECONDARY (จุดปล่อยของ) → DROP_POINT
      [3] ชี้ปุ่ม Max ใน dialog                → BTN_MAX
      [4] ชี้ปุ่ม O ยืนยัน ใน dialog            → BTN_CONFIRM
-     [c] ชี้ปุ่ม X ยกเลิก ใน dialog            → BTN_CANCEL
      [5] ชี้ปุ่ม "เปิดหลังรถ" ในหน้า GARAGE     → BTN_OPEN_TRUNK
      [6] เปิดแผนที่/เมนู pause (Esc) ค้างไว้ แล้วกด 6 → map_template.png
      [7] เปิดหน้าท้ายรถ (กด L) ให้เห็นหัวข้อ INVENTORY แล้วกด 7 → garage_template.png
@@ -96,7 +95,6 @@ def main():
         keyboard.add_hotkey("2", lambda: rec("2", "DROP_POINT"))
         keyboard.add_hotkey("3", lambda: rec("3", "BTN_MAX"))
         keyboard.add_hotkey("4", lambda: rec("4", "BTN_CONFIRM"))
-        keyboard.add_hotkey("c", lambda: rec("c", "BTN_CANCEL"))
         keyboard.add_hotkey("5", lambda: rec("5", "BTN_OPEN_TRUNK"))
         keyboard.add_hotkey("6", lambda: save_region_template("MAP_CHECK_REGION", "map_template.png", "แผนที่/เมนู"))
         keyboard.add_hotkey("7", lambda: save_region_template("GARAGE_CHECK_REGION", "garage_template.png", "หน้าท้ายรถ", crop_text=True))

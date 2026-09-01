@@ -180,18 +180,6 @@ def _cancel_before_open(tag):
     time.sleep(config.CANCEL_KEY_DELAY)
 
 
-def _close_dialog(sct, tag):
-    """
-    ปิด dialog ใส่จำนวนที่ค้างอยู่ด้วยปุ่ม X (ยกเลิก)
-    ฝากไม่ลง dialog จะไม่ปิดเอง ถ้าปล่อยค้างไว้ ขั้นตอนถัดไปจะกดอะไรไม่ติดเลย
-    """
-    if not is_dialog_open(sct):
-        return
-    print(f"[{tag}] dialog ยังค้าง — คลิก X ปิดที่ {config.BTN_CANCEL}")
-    inp.click(*config.BTN_CANCEL)
-    time.sleep(config.CLICK_DELAY)
-
-
 def _fallback_discard(sct, reason):
     """
     ฝากท้ายรถไม่ลง (ท้ายรถเต็ม) → ปิดหน้าต่างแล้วทิ้งของแทน จะได้ฟาร์มต่อได้
@@ -290,7 +278,6 @@ def _deposit_to_trunk(sct):
         # counter บน HUD ยังเห็นได้ทั้งที่หน้าต่างเปิดอยู่ → เช็คได้เลย
         if is_stone_empty(sct):
             break
-        _close_dialog(sct, "ฝาก")
         if check_dialog:
             # dialog เด้ง + กด O แล้ว แต่ของไม่ลด = เกมปฏิเสธ (ท้ายรถเต็ม)
             # ไม่ใช่เรื่องช่องปลายทางผิด ลองช่องอื่นก็ได้ผลเหมือนเดิม
@@ -302,7 +289,6 @@ def _deposit_to_trunk(sct):
         return _fallback_discard(sct, "✗ ลากฝากไม่สำเร็จทุกจุดปล่อย")
 
     # Step 4: ปิดหน้าต่าง
-    _close_dialog(sct, "ฝาก")
     print("[ฝาก] กด ESC ปิดหน้าต่าง")
     inp.press_esc()
     time.sleep(config.AFTER_CLOSE_DELAY)
@@ -389,7 +375,6 @@ def _discard_items(sct):
     time.sleep(config.AFTER_DEPOSIT_DELAY)
 
     # Step 5: ปิดหน้าต่าง
-    _close_dialog(sct, "ทิ้ง")
     print("[ทิ้ง] กด ESC ปิดหน้าต่าง")
     inp.press_esc()
     time.sleep(config.AFTER_CLOSE_DELAY)

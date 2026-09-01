@@ -77,7 +77,6 @@ def drop_candidates():
 
 BTN_MAX = _pt(1102 / 1920, 559 / 1080)           # ปุ่ม Max ใน dialog
 BTN_CONFIRM = _pt(920 / 1920, 618 / 1080)        # ปุ่ม O (ยืนยัน)
-BTN_CANCEL = _pt(999 / 1920, 618 / 1080)         # ปุ่ม X (ยกเลิก) ข้าง ๆ O
 
 # ===== บริเวณค้นหาช่อง Stone ใน INVENTORY (ฝั่งซ้าย) =====
 # อ้างอิง 1920x1080: left=140 top=270 w=730 h=520
@@ -212,8 +211,7 @@ def _load_calibration():
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     g = globals()
-    for key in ("BTN_OPEN_TRUNK", "DROP_POINT", "BTN_MAX", "BTN_CONFIRM",
-                "BTN_CANCEL"):
+    for key in ("BTN_OPEN_TRUNK", "DROP_POINT", "BTN_MAX", "BTN_CONFIRM"):
         if key in data:
             g[key] = tuple(data[key])
     for key in ("COUNTER_REGION", "INVENTORY_REGION"):
@@ -274,5 +272,4 @@ if __name__ == "__main__":
     print(f"DROP_POINT       = {DROP_POINT}")
     print(f"BTN_MAX          = {BTN_MAX}")
     print(f"BTN_CONFIRM      = {BTN_CONFIRM}")
-    print(f"BTN_CANCEL       = {BTN_CANCEL}")
     print(f"FULL_TEXT_MIN_WIDTH = {FULL_TEXT_MIN_WIDTH}")
