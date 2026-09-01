@@ -133,6 +133,27 @@ def eat_if_due(sct=None):
     time.sleep(config.AFTER_EAT_DELAY)
 
 
+_abort = [False]              # กด F10 พักระหว่างกำลังฝาก/ทิ้ง → ให้เลิกกลางคัน
+
+
+def request_abort():
+    """สั่งให้ขั้นตอนฝาก/ทิ้งที่กำลังทำอยู่ หยุดทันที (เรียกตอนกด F10 พัก)"""
+    _abort[0] = True
+
+
+def clear_abort():
+    _abort[0] = False
+
+
+def _aborted(tag):
+    """ถูกสั่งพักหรือยัง — ถ้าใช่ ปิดหน้าต่างให้เรียบร้อยแล้วเลิก"""
+    if not _abort[0]:
+        return False
+    print(f"[{tag}] ⏸ ถูกสั่งพัก — ปิดหน้าต่างแล้วหยุด")
+    inp.press_esc()
+    return True
+
+
 _trunk_full_since = [0.0]     # เวลาที่เจอว่าท้ายรถเต็มครั้งล่าสุด (0 = ยังไม่เจอ)
 
 
@@ -187,6 +208,8 @@ def _deposit_to_trunk(sct):
         print("[ฝาก] ท้ายรถเต็มอยู่ (จำจากรอบก่อน) — ทิ้งของเลย ไม่ต้องเปิดท้ายรถ")
         return _discard_items(sct)
 
+    if _aborted("ฝาก"):
+        return False
     _cancel_before_open("ฝาก")
 
     # Step 1: กด L เปิดท้ายรถ + ยืนยันว่าเปิดจริง (กด L ซ้ำถ้ายังไม่ขึ้น)
@@ -196,6 +219,8 @@ def _deposit_to_trunk(sct):
 
     opened = False
     for attempt in range(1, config.GARAGE_OPEN_RETRIES + 1):
+        if _aborted("ฝาก"):
+            return False
         print(f"[ฝาก] กด L เปิดท้ายรถ (ครั้งที่ {attempt})...")
         inp.press_l()
         time.sleep(config.TRUNK_OPEN_DELAY)
@@ -225,6 +250,8 @@ def _deposit_to_trunk(sct):
     candidates = config.drop_candidates()
     attempts = min(config.DEPOSIT_RETRIES, config.DEPOSIT_ATTEMPTS_BEFORE_DISCARD)
     for attempt in range(1, attempts + 1):
+        if _aborted("ฝาก"):
+            return False
         slot = _find_slot_with_scroll(sct, config.INVENTORY_REGION, "ฝาก")
         if slot is None:
             save_debug_screenshot(sct, "no_stone_slot")
@@ -297,6 +324,8 @@ def _discard_items(sct):
 
     opened = False
     for attempt in range(1, config.BAG_OPEN_RETRIES + 1):
+        if _aborted("ทิ้ง"):
+            return False
         print(f"[ทิ้ง] กด T เปิดกระเป๋า (ครั้งที่ {attempt})...")
         inp.press_t()
         time.sleep(config.BAG_OPEN_DELAY)
@@ -317,6 +346,8 @@ def _discard_items(sct):
         return False
 
     # Step 2: หาช่องของในกระเป๋า (เลื่อนขึ้นบนสุด แล้วไล่เลื่อนลงถ้ายังไม่เจอ)
+    if _aborted("ทิ้ง"):
+        return False
     slot = _find_slot_with_scroll(sct, config.BAG_REGION, "ทิ้ง")
 
     if slot is None:

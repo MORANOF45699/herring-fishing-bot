@@ -25,7 +25,8 @@ import config
 import stone_input as inp
 from stone_detector import full_match_score, full_min_width, is_map_open, counter_changed
 from stone_actions import (deposit_to_trunk, discard_items, drink_if_due,
-                           drink_remaining, eat_if_due, eat_remaining)
+                           drink_remaining, eat_if_due, eat_remaining,
+                           request_abort, clear_abort)
 
 MAX_DEPOSIT_FAILS = 2  # ฝากพลาดติดกันกี่ครั้งถึงหยุดบอท
 
@@ -110,6 +111,7 @@ def main():
     def toggle():
         state["active"] = not state["active"]
         if state["active"]:
+            clear_abort()
             print("\n[บอท] ▶ เริ่มทำงาน — กด G เริ่มออโต้ฟาร์ม")
             time.sleep(0.3)
             inp.focus_game()
@@ -118,6 +120,7 @@ def main():
             if config.PARK_GAME_OFFSCREEN and config.CAPTURE_MODE == "window":
                 inp.park_game()
         else:
+            request_abort()      # กำลังฝาก/ทิ้งอยู่ ให้เลิกกลางคันทันที
             print("\n[บอท] ⏸ หยุดชั่วคราว")
             inp.unpark_game()
 
