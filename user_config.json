@@ -4,5 +4,7 @@
     "ENABLE_EAT": false,
     "EAT_INTERVAL_MIN": 150.0,
     "DEPOSIT_MODE": "trunk",
-    "CHECK_INTERVAL": 4.0
+    "CHECK_INTERVAL": 4.0,
+    "CAPTURE_MODE": "screen",
+    "PARK_GAME_OFFSCREEN": false
 }

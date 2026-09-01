@@ -122,11 +122,28 @@ def main():
             except ValueError:
                 input("ค่าไม่ถูกต้อง! กรุณาใส่ตัวเลขเท่านั้น (กด Enter เพื่อลองใหม่)")
         elif choice == "7":
-            if save_config(config):
-                input("\nกด Enter เพื่อปิดหน้าต่าง...")
-                break
+            if config.get("CAPTURE_MODE", "screen") == "window":
+                config["CAPTURE_MODE"] = "screen"
+            else:
+                config["CAPTURE_MODE"] = "window"
+                print()
+                print("  หมายเหตุ: โหมดนี้ต้องลง  pip install windows-capture")
+                print("  ย่อ (minimize) เกมยังไม่ได้ — Windows หยุดวาดหน้าต่างที่ย่อ")
+                input("  กด Enter เพื่อไปต่อ...")
         elif choice == "8":
-            print("\nยกเลิกการตั้งค่า")
+            config["PARK_GAME_OFFSCREEN"] = not config.get("PARK_GAME_OFFSCREEN", False)
+            if config["PARK_GAME_OFFSCREEN"] and config.get("CAPTURE_MODE") != "window":
+                print()
+                print("  ต้องตั้ง [7] เป็น window ก่อน ไม่งั้นจอดแล้วอ่าน counter ไม่ได้")
+                input("  กด Enter เพื่อไปต่อ...")
+        elif choice == "9":
+            if save_config(config):
+                print()
+                input("กด Enter เพื่อปิดหน้าต่าง...")
+                break
+        elif choice == "0":
+            print()
+            print("ยกเลิกการตั้งค่า")
             break
         else:
             input("เลือกเมนูไม่ถูกต้อง! (กด Enter เพื่อลองใหม่)")
