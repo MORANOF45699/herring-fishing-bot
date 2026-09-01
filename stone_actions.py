@@ -16,8 +16,8 @@ import config
 import stone_input as inp
 from stone_detector import (find_stone_slot, is_stone_empty, is_garage_open,
                             is_bag_open, is_drinking, is_eating, is_map_open,
-                            is_dialog_open, is_trunk_full, trunk_full_score,
-                            template_available, save_debug_screenshot)
+                            is_dialog_open, template_available,
+                            save_debug_screenshot)
 
 
 def _recover(sct):
@@ -133,6 +133,20 @@ def eat_if_due(sct=None):
     time.sleep(config.AFTER_EAT_DELAY)
 
 
+_trunk_full_since = [0.0]     # เวลาที่เจอว่าท้ายรถเต็มครั้งล่าสุด (0 = ยังไม่เจอ)
+
+
+def trunk_known_full():
+    """เพิ่งเจอว่าท้ายรถเต็มไปหรือเปล่า — ถ้าใช่ ข้ามการฝากไปทิ้งเลย"""
+    if not _trunk_full_since[0]:
+        return False
+    if time.time() - _trunk_full_since[0] > config.TRUNK_FULL_MEMORY:
+        _trunk_full_since[0] = 0.0        # ครบเวลาแล้ว กลับไปลองฝากใหม่
+        print("[ฝาก] ครบเวลาจำ — กลับไปลองฝากท้ายรถอีกครั้ง")
+        return False
+    return True
+
+
 def _cancel_before_open(tag):
     """
     กด X ยกเลิกแอนิเมชันฟาร์มก่อน 1 ครั้ง แล้วค่อยเปิดกระเป๋า/ท้ายรถ
@@ -151,7 +165,9 @@ def _fallback_discard(sct, reason):
     """
     if not config.DISCARD_WHEN_TRUNK_FULL:
         return False
-    print(f"[ฝาก] {reason} — ท้ายรถน่าจะเต็ม เปลี่ยนไปทิ้งของแทน")
+    _trunk_full_since[0] = time.time()    # จำไว้ รอบหน้าไม่ต้องมาลากเปล่าอีก
+    print(f"[ฝาก] {reason} — ท้ายรถเต็ม เปลี่ยนไปทิ้งของแทน "
+          f"(ข้ามการฝาก {config.TRUNK_FULL_MEMORY/60:.0f} นาที)")
     inp.press_esc()
     time.sleep(config.AFTER_CLOSE_DELAY)
     return _discard_items(sct)
@@ -166,6 +182,10 @@ def _deposit_to_trunk(sct):
         save_debug_screenshot(sct, "no_focus")
         print("[ฝาก] ✗ เกมไม่ได้อยู่หน้าจอ — ข้ามรอบนี้ (ไม่กดปุ่มมั่ว)")
         return False
+
+    if trunk_known_full() and config.DISCARD_WHEN_TRUNK_FULL:
+        print("[ฝาก] ท้ายรถเต็มอยู่ (จำจากรอบก่อน) — ทิ้งของเลย ไม่ต้องเปิดท้ายรถ")
+        return _discard_items(sct)
 
     _cancel_before_open("ฝาก")
 
@@ -195,17 +215,6 @@ def _deposit_to_trunk(sct):
         inp.press_esc()
         return False
 
-    # Step 1.5: อ่านน้ำหนักท้ายรถก่อนเลย — เต็มแล้วไม่ต้องเสียเวลาลาก
-    diff = trunk_full_score(sct)
-    if diff is not None:
-        print(f"[ฝาก] น้ำหนักท้ายรถ: เลขสองฝั่งต่างกัน {diff*100:.1f}% "
-              f"(เต็มถ้า <= {config.TRUNK_FULL_MAX_DIFF*100:.0f}%)")
-    else:
-        print("[ฝาก] ⚠ อ่านตัวเลข KG ไม่ได้ — ข้ามการเช็คท้ายรถเต็ม")
-    if is_trunk_full(sct):
-        save_debug_screenshot(sct, "trunk_full")
-        return _fallback_discard(sct, "✗ ท้ายรถเต็มแล้ว (อ่านจากตัวเลข KG)")
-
     # Step 2-3: ลากไอเทม → dialog → Max → O
     # รอบแรกช่องปลายทางว่าง ลากลงได้ แต่รอบต่อไปช่องนั้นมีของแล้ว ลากไม่ลง
     # → วนลองจุดปล่อยสำรองในหน้าต่างเดิม ไม่ต้องปิดเปิดท้ายรถใหม่
@@ -214,7 +223,8 @@ def _deposit_to_trunk(sct):
         print("[ฝาก] (ข้ามการยืนยัน dialog — ยังไม่มี dialog_template.png)")
 
     candidates = config.drop_candidates()
-    for attempt in range(1, config.DEPOSIT_RETRIES + 1):
+    attempts = min(config.DEPOSIT_RETRIES, config.DEPOSIT_ATTEMPTS_BEFORE_DISCARD)
+    for attempt in range(1, attempts + 1):
         slot = _find_slot_with_scroll(sct, config.INVENTORY_REGION, "ฝาก")
         if slot is None:
             save_debug_screenshot(sct, "no_stone_slot")
@@ -223,7 +233,7 @@ def _deposit_to_trunk(sct):
             return False
 
         drop = candidates[(attempt - 1) % len(candidates)]
-        print(f"[ฝาก] ลากไอเทม {slot} → {drop} (ครั้งที่ {attempt}/{config.DEPOSIT_RETRIES})")
+        print(f"[ฝาก] ลากไอเทม {slot} → {drop} (ครั้งที่ {attempt}/{attempts})")
         inp.drag(*slot, *drop, duration=config.DRAG_DURATION)
         time.sleep(config.DIALOG_OPEN_DELAY)
 
