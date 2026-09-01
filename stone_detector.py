@@ -218,36 +218,57 @@ def is_eating(sct):
     return is_drinking(sct)
 
 
-def trunk_full_score(sct):
-    """
-    อ่านน้ำหนักท้ายรถ "ใช้แล้ว/ความจุ" แล้วเทียบว่าเลขสองฝั่งเหมือนกันไหม
-    เหมือนกัน = ท้ายรถเต็ม  Returns: คะแนน 0-1 (None ถ้าอ่านข้อความไม่ได้)
-    """
+def _weight_mask(sct):
     bgr = _grab(sct, config.TRUNK_WEIGHT_REGION)
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-    mask = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)[1]
+    return cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)[1]
 
+
+def _split_at_slash(mask):
+    """
+    ตัดข้อความ "ใช้แล้ว/ความจุ" ตรงตัว "/" — ตัว / สูงกว่าตัวเลข
+    เลยหาได้จากคอลัมน์ที่พิกเซลบนสุดอยู่สูงกว่าเพื่อน
+    Returns: (ภาพเลขซ้าย, ภาพเลขขวา) หรือ None ถ้าอ่านไม่ได้
+    """
     cols = np.where(mask.any(axis=0))[0]
-    rows = np.where(mask.any(axis=1))[0]
-    if len(cols) < 10 or len(rows) < 5:
-        return None                      # ไม่เจอข้อความ (หน้าต่างยังไม่เปิด?)
-
-    mask = mask[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
-    w = mask.shape[1]
-    half = w // 2
-    if half < 5:
+    if len(cols) < 10:
         return None
-    left, right = mask[:, :half], mask[:, w - half:]
-    return float(cv2.minMaxLoc(cv2.matchTemplate(left, right,
-                                                 cv2.TM_CCOEFF_NORMED))[1])
+
+    tops = {x: np.where(mask[:, x])[0][0] for x in cols}
+    highest = min(tops.values())
+    slash_cols = [x for x in cols if tops[x] == highest]
+    sl, sr = min(slash_cols), max(slash_cols)
+    if sl <= cols[0] or sr >= cols[-1]:
+        return None                      # ไม่เจอ / อยู่กลางข้อความ
+
+    def trim(a):
+        cc = np.where(a.any(axis=0))[0]
+        return a[:, cc[0]:cc[-1] + 1] if len(cc) else a
+
+    return trim(mask[:, cols[0]:sl]), trim(mask[:, sr + 1:cols[-1] + 1])
+
+
+def trunk_full_score(sct):
+    """
+    สัดส่วนพิกเซลที่ต่างกันระหว่างเลขสองฝั่งของ "/"
+    0.0 = เหมือนกันเป๊ะ = ท้ายรถเต็ม   ยิ่งมากยิ่งเหลือที่ว่าง
+    Returns: 0.0-1.0 หรือ None ถ้าอ่านข้อความไม่ได้
+    """
+    parts = _split_at_slash(_weight_mask(sct))
+    if parts is None:
+        return None
+    left, right = parts
+    if left.shape != right.shape:
+        return 1.0                       # จำนวนหลักไม่เท่ากัน = ยังไม่เต็มแน่นอน
+    return cv2.countNonZero(cv2.absdiff(left, right)) / float(left.size)
 
 
 def is_trunk_full(sct):
-    """ท้ายรถเต็มหรือยัง (อ่านจากตัวเลข KG มุมขวาล่าง)"""
-    score = trunk_full_score(sct)
-    if score is None:
+    """ท้ายรถเต็มหรือยัง (อ่านจากตัวเลข KG มุมขวาล่าง — ใช้ได้ทุกความจุ)"""
+    diff = trunk_full_score(sct)
+    if diff is None:
         return False                     # อ่านไม่ได้ → อย่าเพิ่งสรุปว่าเต็ม
-    return score >= config.TRUNK_FULL_THRESHOLD
+    return diff <= config.TRUNK_FULL_MAX_DIFF
 
 
 def is_dialog_open(sct):

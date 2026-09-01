@@ -182,10 +182,12 @@ def _deposit_to_trunk(sct):
         return False
 
     # Step 1.5: อ่านน้ำหนักท้ายรถก่อนเลย — เต็มแล้วไม่ต้องเสียเวลาลาก
-    score = trunk_full_score(sct)
-    if score is not None:
-        print(f"[ฝาก] น้ำหนักท้ายรถ: ความเหมือนเลขสองฝั่ง={score:.2f} "
-              f"(เต็มถ้า >= {config.TRUNK_FULL_THRESHOLD})")
+    diff = trunk_full_score(sct)
+    if diff is not None:
+        print(f"[ฝาก] น้ำหนักท้ายรถ: เลขสองฝั่งต่างกัน {diff*100:.1f}% "
+              f"(เต็มถ้า <= {config.TRUNK_FULL_MAX_DIFF*100:.0f}%)")
+    else:
+        print("[ฝาก] ⚠ อ่านตัวเลข KG ไม่ได้ — ข้ามการเช็คท้ายรถเต็ม")
     if is_trunk_full(sct):
         save_debug_screenshot(sct, "trunk_full")
         return _fallback_discard(sct, "✗ ท้ายรถเต็มแล้ว (อ่านจากตัวเลข KG)")
