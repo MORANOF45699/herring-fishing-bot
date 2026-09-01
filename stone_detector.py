@@ -236,13 +236,31 @@ def is_garage_open(sct):
                                 config.GARAGE_CHECK_REGION, config.GARAGE_MATCH_THRESHOLD)
 
 
+def _prune_debug(name, keep):
+    """ลบภาพเก่าของปัญหาชนิดนี้ ให้เหลือแค่ keep ไฟล์ล่าสุด (กันเต็มดิสก์)"""
+    try:
+        old = sorted(f for f in os.listdir(DEBUG_DIR)
+                     if f.startswith(name + "_") and f.endswith(".png"))
+        for f in old[:max(0, len(old) - keep)]:
+            os.remove(os.path.join(DEBUG_DIR, f))
+    except OSError:
+        pass
+
+
 def save_debug_screenshot(sct, name):
-    """save ภาพเต็มจอไว้ดูตอนบอทพัง"""
+    """
+    save ภาพเต็มจอไว้ดูตอนบอทพัง (เซฟเฉพาะตอนพลาด ไม่ใช่ทุกรอบ)
+    เก็บแค่ DEBUG_KEEP_PER_NAME ไฟล์ล่าสุดต่อชนิดปัญหา — ที่เหลือลบทิ้ง
+    """
+    keep = config.DEBUG_KEEP_PER_NAME
+    if keep <= 0:
+        return
     os.makedirs(DEBUG_DIR, exist_ok=True)
     monitor = sct.monitors[1]
     bgr = _grab(sct, monitor)
     path = os.path.join(DEBUG_DIR, f"{name}_{int(time.time())}.png")
     cv2.imwrite(path, bgr)
+    _prune_debug(name, keep)
     print(f"[detector] บันทึก debug: {path}")
 
 

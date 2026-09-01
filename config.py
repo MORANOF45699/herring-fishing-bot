@@ -157,6 +157,9 @@ DRINK_LOADING_MIN_PX = max(20, int(80 * SCALE * SCALE))   # px สีส้ม�
 DRINK_RETRIES = 3           # กด 1 ซ้ำได้กี่ครั้งถ้าแถบไม่ขึ้น
 DRINK_CHECK_DELAY = 1.0     # รอแถบขึ้นหลังกด 1
 
+# ===== ภาพ debug ตอนบอทพลาด =====
+DEBUG_KEEP_PER_NAME = 5     # เก็บภาพล่าสุดกี่ไฟล์ต่อชนิดปัญหา (0 = ไม่เซฟเลย)
+
 # ===== เช็คฟาร์มค้าง =====
 STUCK_TIMEOUT = 10.0        # ตัวเลข counter นิ่งเกินกี่วิ → กด G ย้ำ
 COUNTER_DIFF_MIN_PX = max(6, int(20 * SCALE * SCALE))   # px ต่างขั้นต่ำ = เลขเปลี่ยนจริง (สเกลตามจอ)
