@@ -95,6 +95,8 @@ def bot_loop():
                 time.sleep(0.2)
                 continue
 
+            config.reload_user_config()   # แก้ user_config.json แล้วมีผลทันที
+
             # โหมดจับหน้าจอ: เกมต้องไม่โดนหน้าต่างอื่นบัง/ถูกย่อ
             # โหมดจับหน้าต่าง: ทับได้ ข้ามการเช็คนี้ไปเลย
             if sct.mode == "screen" and not inp.game_covers_point(counter_cx, counter_cy):

@@ -6,5 +6,9 @@
     "DEPOSIT_MODE": "trunk",
     "CHECK_INTERVAL": 4.0,
     "CAPTURE_MODE": "window",
-    "PARK_GAME_OFFSCREEN": true
+    "PARK_GAME_OFFSCREEN": true,
+    "TRUNK_FULL_MEMORY_MIN": 10.0,
+    "DEPOSIT_ATTEMPTS_BEFORE_DISCARD": 2,
+    "CANCEL_BEFORE_OPEN": true,
+    "STUCK_TIMEOUT": 10.0
 }

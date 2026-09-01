@@ -257,11 +257,51 @@ def _load_user_config():
             g["PARK_GAME_OFFSCREEN"] = bool(data["PARK_GAME_OFFSCREEN"])
         if "DISCARD_WHEN_TRUNK_FULL" in data:
             g["DISCARD_WHEN_TRUNK_FULL"] = bool(data["DISCARD_WHEN_TRUNK_FULL"])
+
+        # เวลาจำว่าท้ายรถเต็ม (ใส่เป็นนาทีใน json) + ค่าอื่นที่ปรับหน้างานบ่อย
+        if "TRUNK_FULL_MEMORY_MIN" in data:
+            g["TRUNK_FULL_MEMORY"] = int(float(data["TRUNK_FULL_MEMORY_MIN"]) * 60)
+        if "DEPOSIT_ATTEMPTS_BEFORE_DISCARD" in data:
+            g["DEPOSIT_ATTEMPTS_BEFORE_DISCARD"] = int(data["DEPOSIT_ATTEMPTS_BEFORE_DISCARD"])
+        if "CANCEL_BEFORE_OPEN" in data:
+            g["CANCEL_BEFORE_OPEN"] = bool(data["CANCEL_BEFORE_OPEN"])
+        if "STUCK_TIMEOUT" in data:
+            g["STUCK_TIMEOUT"] = float(data["STUCK_TIMEOUT"])
     except Exception as e:
         print(f"[config] ⚠ ไม่สามารถโหลด user_config.json ได้: {e}")
 
 
-_load_user_config()
+_user_config_seen = [None]    # เนื้อไฟล์ครั้งล่าสุดที่โหลด
+
+
+def reload_user_config(verbose=True):
+    """
+    โหลด user_config.json ใหม่ถ้าเนื้อไฟล์เปลี่ยน — เรียกได้ระหว่างบอทกำลังรัน
+    แก้ไฟล์แล้วเซฟ ค่าใหม่มีผลทันที ไม่ต้องปิดเปิดบอท
+
+    เทียบเนื้อไฟล์ ไม่ใช่ mtime — เขียนไฟล์สองครั้งในวินาทีเดียวกัน
+    mtime อาจเท่าเดิม แล้วจะพลาดการเปลี่ยนแปลง
+    Returns: True ถ้าเพิ่งโหลดใหม่
+    """
+    path = os.path.join(os.path.dirname(__file__), "user_config.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return False
+    if text == _user_config_seen[0]:
+        return False
+    first = _user_config_seen[0] is None
+    _user_config_seen[0] = text
+    _load_user_config()
+    if verbose and not first:
+        print(f"[config] โหลด user_config.json ใหม่ — "
+              f"จำท้ายรถเต็ม {TRUNK_FULL_MEMORY/60:.0f} นาที, "
+              f"สแกนทุก {CHECK_INTERVAL} วิ, โหมด {DEPOSIT_MODE}")
+    return True
+
+
+reload_user_config(verbose=False)
 
 if __name__ == "__main__":
     import sys
