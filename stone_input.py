@@ -16,6 +16,7 @@ KEY_G = 0x22
 KEY_E = 0x12
 KEY_T = 0x14
 KEY_1 = 0x02
+KEY_X = 0x2D
 KEY_2 = 0x03
 KEY_ESC = 0x01
 
@@ -142,6 +143,10 @@ def press_1():
 
 def press_2():
     press_key(KEY_2)
+
+
+def press_x():
+    press_key(KEY_X)
 
 
 def press_esc():

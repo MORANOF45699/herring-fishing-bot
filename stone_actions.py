@@ -133,6 +133,18 @@ def eat_if_due(sct=None):
     time.sleep(config.AFTER_EAT_DELAY)
 
 
+def _cancel_before_open(tag):
+    """
+    กด X ยกเลิกแอนิเมชันฟาร์มก่อน 1 ครั้ง แล้วค่อยเปิดกระเป๋า/ท้ายรถ
+    ตัวละครที่ยังค้างอยู่กลางแอนิเมชันจะกด L/T ไม่ติด
+    """
+    if not config.CANCEL_BEFORE_OPEN:
+        return
+    print(f"[{tag}] กด X ยกเลิกก่อน 1 ครั้ง")
+    inp.press_x()
+    time.sleep(config.CANCEL_KEY_DELAY)
+
+
 def _fallback_discard(sct, reason):
     """
     ฝากท้ายรถไม่ลง (ท้ายรถเต็ม) → ปิดหน้าต่างแล้วทิ้งของแทน จะได้ฟาร์มต่อได้
@@ -154,6 +166,8 @@ def _deposit_to_trunk(sct):
         save_debug_screenshot(sct, "no_focus")
         print("[ฝาก] ✗ เกมไม่ได้อยู่หน้าจอ — ข้ามรอบนี้ (ไม่กดปุ่มมั่ว)")
         return False
+
+    _cancel_before_open("ฝาก")
 
     # Step 1: กด L เปิดท้ายรถ + ยืนยันว่าเปิดจริง (กด L ซ้ำถ้ายังไม่ขึ้น)
     check_garage = template_available(config.GARAGE_TEMPLATE)
@@ -263,6 +277,8 @@ def _discard_items(sct):
         save_debug_screenshot(sct, "no_focus")
         print("[ทิ้ง] ✗ เกมไม่ได้อยู่หน้าจอ — ข้ามรอบนี้ (ไม่กดปุ่มมั่ว)")
         return False
+
+    _cancel_before_open("ทิ้ง")
 
     # Step 1: กด T เปิดกระเป๋า + ยืนยันว่าเปิดจริง (กด T ซ้ำถ้ายังไม่ขึ้น)
     check_bag = template_available(config.GARAGE_TEMPLATE)
