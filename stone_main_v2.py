@@ -153,6 +153,10 @@ def bot_loop():
 
 
 def main():
+    import atexit
+    inp.rescue_offscreen_game()      # เกมค้างนอกจอจากรอบก่อน → ลากกลับ
+    atexit.register(inp.unpark_game)  # ปิดโปรแกรมยังไง เกมต้องกลับเข้าจอ
+
     if not acquire_single_instance():
         print("[v2] มีบอทตัวอื่นรันอยู่แล้ว — ปิดตัวนี้ทิ้ง (กันปุ่มตีกัน)")
         return

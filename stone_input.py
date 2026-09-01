@@ -211,6 +211,32 @@ def is_parked():
     return _parked_at[0] is not None
 
 
+def window_is_offscreen(hwnd=None):
+    """หน้าต่างเกมอยู่นอกขอบเดสก์ท็อปไหม (ใช้กู้เคสบอทตายตอนจอดอยู่)"""
+    hwnd = hwnd or _find_game_hwnd()
+    if not hwnd:
+        return False
+    r = RECT()
+    user32.GetWindowRect(hwnd, ctypes.byref(r))
+    return r.left <= PARK_POS[0] + 1000
+
+
+def rescue_offscreen_game():
+    """
+    ตอนเปิดโปรแกรม: ถ้าเจอเกมค้างอยู่นอกจอ (บอทรอบก่อนตายตอนจอดอยู่)
+    ลากกลับมาที่ 0,0 ให้ ไม่งั้นผู้ใช้จะหาหน้าต่างไม่เจอเลย
+    """
+    hwnd = _find_game_hwnd()
+    if not hwnd or not window_is_offscreen(hwnd):
+        return False
+    print("[หน้าต่าง] เจอเกมค้างอยู่นอกจอ — ลากกลับเข้าจอให้")
+    user32.SetWindowPos(hwnd, None, 0, 0, 0, 0,
+                        SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)
+    _parked_at[0] = None
+    time.sleep(0.5)
+    return True
+
+
 def park_game():
     """
     ย้ายหน้าต่างเกมออกไปนอกจอ (ไม่ใช่ย่อ — ย่อแล้ว Windows หยุด render จับภาพไม่ได้)

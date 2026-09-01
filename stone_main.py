@@ -65,6 +65,10 @@ def print_banner():
 
 
 def main():
+    import atexit
+    inp.rescue_offscreen_game()      # เกมค้างนอกจอจากรอบก่อน → ลากกลับ
+    atexit.register(inp.unpark_game)  # ปิดโปรแกรมยังไง เกมต้องกลับเข้าจอ
+
     if not acquire_single_instance():
         print("มีบอทตัวอื่นรันอยู่แล้ว — ปิดตัวนั้นก่อน (กันปุ่มตีกัน)")
         input("กด Enter เพื่อปิด...")
