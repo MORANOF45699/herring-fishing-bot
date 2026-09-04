@@ -1,5 +1,5 @@
 {
-    "ENABLE_DRINK": true,
+    "ENABLE_DRINK": false,
     "DRINK_INTERVAL_MIN": 180.0,
     "ENABLE_EAT": false,
     "EAT_INTERVAL_MIN": 150.0,
