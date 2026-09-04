@@ -263,6 +263,10 @@ def _load_user_config():
         # วิธีจับภาพ + จอดเกมนอกจอ
         if "CAPTURE_MODE" in data:
             g["CAPTURE_MODE"] = str(data["CAPTURE_MODE"])
+        # ปุ่มเปิด/ปิด - บอทหลายตัวต้องใช้คนละปุ่ม ไม่งั้นกดทีเดียวโดนหมด
+        for key in ("KEY_TOGGLE", "KEY_TOGGLE_HUD"):
+            if key in data:
+                g[key] = str(data[key])
         if "PARK_GAME_OFFSCREEN" in data:
             g["PARK_GAME_OFFSCREEN"] = bool(data["PARK_GAME_OFFSCREEN"])
         if "DISCARD_WHEN_TRUNK_FULL" in data:
